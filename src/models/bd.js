@@ -1,0 +1,181 @@
+let clienteId = 1
+let enviosId = 1
+
+const clientes = [
+  {
+    "clienteId": clienteId++,
+    "username": "juanperez",
+    "nombre": "Juan",
+    "apellido": "Pérez",
+    "email": "juanperez@example.com",
+    "password": "1234",
+    "plan": "plus",
+    "createdAt": "2025-09-06"
+  },
+  {
+    "clienteId": clienteId++,
+    "username": "mariagomez",
+    "nombre": "María",
+    "apellido": "Gómez",
+    "email": "mariagomez@example.com",
+    "password": "abcd",
+    "plan": "premium",
+    "createdAt": "2025-09-06"
+  },
+  {
+    "clienteId": clienteId++,
+    "username": "pedrorodriguez",
+    "nombre": "Pedro",
+    "apellido": "Rodríguez",
+    "email": "pedrorodriguez@example.com",
+    "password": "pass",
+    "plan": "plus",
+    "createdAt": "2025-09-06"
+  },
+  {
+    "clienteId": clienteId++,
+    "username": "laurafernandez",
+    "nombre": "Laura",
+    "apellido": "Fernández",
+    "email": "laurafernandez@example.com",
+    "password": "laura",
+    "plan": "premium",
+    "createdAt": "2025-09-06"
+  },
+  {
+    "clienteId": clienteId++,
+    "username": "carloslopez",
+    "nombre": "Carlos",
+    "apellido": "López",
+    "email": "carloslopez@example.com",
+    "password": "carlos",
+    "plan": "plus",
+    "createdAt": "2025-09-06"
+  }
+];
+
+
+const envios = [
+  {
+    "enviosId": enviosId++,
+    "clienteId": 1,
+    "origen": { "calle": "Av. 18 de Julio", "numero": 1234, "ciudad": "Montevideo" },
+    "destino": { "calle": "Colonia", "numero": 567, "ciudad": "Montevideo" },
+    "fechaRetiro": "2025-09-06",
+    "horaRetiroAprox": "12:00",
+    "tamanoPaquete": "chico",
+    "notas": "Sobre con documentación",
+    "categoria": { "nombre": "Documentación", "descripcion": "Papeles, sobres, contratos" },
+    "estado": "pendiente"
+  },
+  {
+    "enviosId": enviosId++,
+    "clienteId": 1,
+    "origen": { "calle": "Mercedes", "numero": 2000, "ciudad": "Montevideo" },
+    "destino": { "calle": "Convención", "numero": 455, "ciudad": "Montevideo" },
+    "fechaRetiro": "2025-09-07",
+    "horaRetiroAprox": "09:30",
+    "tamanoPaquete": "mediano",
+    "notas": "Caja de zapatos",
+    "categoria": { "nombre": "Urgente", "descripcion": "Entregas con prioridad máxima" },
+    "estado": "en_ruta"
+  },
+  {
+    "enviosId": enviosId++,
+    "clienteId": 2,
+    "origen": { "calle": "Rivera", "numero": 300, "ciudad": "Montevideo" },
+    "destino": { "calle": "General Flores", "numero": 1500, "ciudad": "Montevideo" },
+    "fechaRetiro": "2025-09-08",
+    "horaRetiroAprox": "15:00",
+    "tamanoPaquete": "grande",
+    "notas": "Frasco de vidrio",
+    "categoria": { "nombre": "Frágil", "descripcion": "Frascos, vidrio, objetos delicados" },
+    "estado": "pendiente"
+  },
+  {
+    "enviosId": enviosId++,
+    "clienteId": 2,
+    "origen": { "calle": "Maldonado", "numero": 890, "ciudad": "Montevideo" },
+    "destino": { "calle": "Ejido", "numero": 45, "ciudad": "Montevideo" },
+    "fechaRetiro": "2025-09-06",
+    "horaRetiroAprox": "18:00",
+    "tamanoPaquete": "chico",
+    "notas": "Urgente para oficina",
+    "categoria": { "nombre": "Urgente", "descripcion": "Entregas con prioridad máxima" },
+    "estado": "pendiente"
+  },
+  {
+    "enviosId": enviosId++,
+    "clienteId": 2,
+    "origen": { "calle": "Guayabos", "numero": 678, "ciudad": "Montevideo" },
+    "destino": { "calle": "Soriano", "numero": 789, "ciudad": "Montevideo" },
+    "fechaRetiro": "2025-09-06",
+    "horaRetiroAprox": "14:00",
+    "tamanoPaquete": "mediano",
+    "notas": "Caja con libros",
+    "categoria": { "nombre": "Documentación", "descripcion": "Papeles, sobres, contratos" },
+    "estado": "entregado"
+  },
+  {
+    "enviosId": enviosId++,
+    "clienteId": 3,
+    "origen": { "calle": "Canelones", "numero": 1200, "ciudad": "Montevideo" },
+    "destino": { "calle": "Paysandú", "numero": 980, "ciudad": "Montevideo" },
+    "fechaRetiro": "2025-09-06",
+    "horaRetiroAprox": "16:00",
+    "tamanoPaquete": "grande",
+    "notas": "Muebles pequeños",
+    "categoria": { "nombre": "Frágil", "descripcion": "Frascos, vidrio, objetos delicados" },
+    "estado": "pendiente"
+  },
+  {
+    "enviosId": enviosId++,
+    "clienteId": 1,
+    "origen": { "calle": "San José", "numero": 1500, "ciudad": "Montevideo" },
+    "destino": { "calle": "Yi", "numero": 333, "ciudad": "Montevideo" },
+    "fechaRetiro": "2025-09-07",
+    "horaRetiroAprox": "11:00",
+    "tamanoPaquete": "chico",
+    "notas": "Entrega rápida",
+    "categoria": { "nombre": "Urgente", "descripcion": "Entregas con prioridad máxima" },
+    "estado": "pendiente"
+  },
+  {
+    "enviosId": enviosId++,
+    "clienteId": 2,
+    "origen": { "calle": "18 de Julio", "numero": 2200, "ciudad": "Montevideo" },
+    "destino": { "calle": "Gaboto", "numero": 990, "ciudad": "Montevideo" },
+    "fechaRetiro": "2025-09-09",
+    "horaRetiroAprox": "09:00",
+    "tamanoPaquete": "mediano",
+    "notas": "Paquete de ropa",
+    "categoria": { "nombre": "Documentación", "descripcion": "Papeles, sobres, contratos" },
+    "estado": "pendiente"
+  },
+  {
+    "enviosId": enviosId++,
+    "clienteId": 3,
+    "origen": { "calle": "Bulevar Artigas", "numero": 500, "ciudad": "Montevideo" },
+    "destino": { "calle": "Gonzalo Ramírez", "numero": 1500, "ciudad": "Montevideo" },
+    "fechaRetiro": "2025-09-10",
+    "horaRetiroAprox": "13:00",
+    "tamanoPaquete": "grande",
+    "notas": "Electrodoméstico pequeño",
+    "categoria": { "nombre": "Frágil", "descripcion": "Frascos, vidrio, objetos delicados" },
+    "estado": "pendiente"
+  },
+  {
+    "enviosId": enviosId++,
+    "clienteId": 1,
+    "origen": { "calle": "Rivera", "numero": 2500, "ciudad": "Montevideo" },
+    "destino": { "calle": "Luis Alberto de Herrera", "numero": 1000, "ciudad": "Montevideo" },
+    "fechaRetiro": "2025-09-11",
+    "horaRetiroAprox": "17:00",
+    "tamanoPaquete": "mediano",
+    "notas": "Pedido estándar",
+    "categoria": { "nombre": "Documentación", "descripcion": "Papeles, sobres, contratos" },
+    "estado": "pendiente"
+  }
+]
+
+module.exports = {envios, clientes}
