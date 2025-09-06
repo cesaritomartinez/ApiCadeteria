@@ -6,7 +6,7 @@ const { getISODate } = require("../utils/date");
 const { authMiddleware } = require("../../middlewares/auth.middleware");
 const { envioSchema } = require("../validators/schemas");
 
-// Aplicar middleware de autenticaci�n a todas las rutas privadas
+// Aplicar middleware de autenticación a todas las rutas privadas
 router.use(authMiddleware);
 
 // Endpoint para agregar un nuevo env�o
