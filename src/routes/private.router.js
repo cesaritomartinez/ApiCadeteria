@@ -40,7 +40,7 @@ router.post("/envios", (req, res) => {
     categoria,
   } = req.body;
 
-  // Crear nuevo env�o
+  // Crear nuevo envío
   const nuevoEnvio = {
     enviosId: envios.length > 0 ? envios[envios.length - 1].enviosId + 1 : 1,
     clienteId,
@@ -55,7 +55,7 @@ router.post("/envios", (req, res) => {
     creadoEn: getISODate(),
   };
 
-  // Agregar a la lista de env�os
+  // Agregar a la lista de envíos
   envios.push(nuevoEnvio);
 
   // Respuesta exitosa
