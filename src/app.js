@@ -12,7 +12,7 @@ app.use(publicRouter);
 //...
 
 // Rutas privadas
-// app.use("/v1", privateRouter);
+app.use("/v1", privateRouter);
 
 // Ruta 404
 // app.use('*', (req, res) => {
