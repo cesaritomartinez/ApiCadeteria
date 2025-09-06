@@ -1,13 +1,18 @@
-const express = require('express');
+const express = require("express");
 const app = express();
-const StatusCodes = require('http-status-codes');
-const publicRouter = require('./routes/public.router');
+
+const publicRouter = require("./routes/public.router");
+const privateRouter = require("./routes/private.router");
 
 app.use(express.json());
-app.use(publicRouter)
 
+// Rutas públicas
+app.use(publicRouter);
+// Middleware de autenticación
+//...
 
-
+// Rutas privadas
+// app.use("/v1", privateRouter);
 
 // Ruta 404
 // app.use('*', (req, res) => {
@@ -17,8 +22,6 @@ app.use(publicRouter)
 //   });
 // });
 
-app.listen(3000 , () => {
-    console.log('Servidor en ejecucion en http://localhost:300');
-})
-
-
+app.listen(3000, () => {
+  console.log("Api escuchando en el puerto 3000");
+});
