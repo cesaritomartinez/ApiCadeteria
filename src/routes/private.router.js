@@ -6,6 +6,7 @@ const {
   getAllEnvios,
   getEnvioById,
   deleteEnvio,
+  updateEnvio,
 } = require("../controllers/envios.controller");
 
 // Aplicar middleware de autenticación a todas las rutas privadas
@@ -19,7 +20,7 @@ router.get("/envios", getAllEnvios);
 
 router.get("/envios/:id", getEnvioById);
 
-// router.put("/envios/:id", getEnvioById);
+router.put("/envios/:id", updateEnvio);
 
 router.delete("/envios/:id", deleteEnvio); // Eliminar envios
 

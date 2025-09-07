@@ -250,7 +250,7 @@ const deleteEnvioById = (id) => {
   return true;
 };
 
-//create new todo
+//create new envio
 const createEnvio = (
   userId,
   origen,
@@ -279,18 +279,23 @@ const createEnvio = (
   return newEnvio;
 };
 
-const updateEnvio = (id, completed) => {
+const updateEnvioService = (id, fechaRetiro, horaRetiroAprox, notas, estado) => {
   const indexToUpdate = envios.findIndex(
     (envio) => envio.envioId === Number(id)
   );
-
   if (indexToUpdate === -1) {
     return null;
   }
 
-  //ACTUALIZAR LO NECESARIO DEL ENVIO ACA
-  envios[indexToUpdate].completed = completed;
+  
+  envios[indexToUpdate].fechaRetiro = fechaRetiro;
+  envios[indexToUpdate].horaRetiroAprox = horaRetiroAprox;
+  envios[indexToUpdate].notas = notas;
+  envios[indexToUpdate].estado = estado;
   return envios[indexToUpdate];
+
+
+
 };
 
 module.exports = {
@@ -299,5 +304,5 @@ module.exports = {
   createEnvio,
   findEnvioById,
   deleteEnvioById,
-  updateEnvio,
+  updateEnvioService,
 };
