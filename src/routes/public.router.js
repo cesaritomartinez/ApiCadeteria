@@ -1,7 +1,7 @@
 const express = require("express");
 const StatusCodes = require("http-status-codes");
 const router = express.Router();
-const { clientes } = require("../models/bd");
+const { usuarios } = require("../models/bd");
 const { getISODate } = require("../utils/date");
 const { registerSchema, loginSchema } = require("../validators/schemas");
 
@@ -50,12 +50,13 @@ router.post("/register", (req, res) => {
 
   // De momento simulamos con un objeto "nuevoUsuario".
   const nuevoUsuario = {
-    clienteId: clientes[clientes.length - 1].clienteId + 1,
+    id: usuarios[usuarios.length - 1].id + 1,
     username,
     nombre,
     apellido,
     email,
     password,
+    role: "cliente",
     creadoEn: getISODate(),
   };
 
@@ -88,7 +89,7 @@ router.post("/login", (req, res) => {
   }
 
   // Buscar usuario por email
-  const usuario = clientes.find((cliente) => cliente.email === email);
+  const usuario = usuarios.find((user) => user.email === email);
 
   if (!usuario) {
     return res.status(StatusCodes.UNAUTHORIZED).json({
@@ -107,11 +108,12 @@ router.post("/login", (req, res) => {
   res.status(StatusCodes.OK).json({
     message: `Bienvenido ${usuario.nombre} ${usuario.apellido}`,
     usuario: {
-      clienteId: usuario.clienteId,
+      id: usuario.id,
       username: usuario.username,
       email: usuario.email,
       nombre: usuario.nombre,
       apellido: usuario.apellido,
+      role: usuario.role,
     },
   });
 });

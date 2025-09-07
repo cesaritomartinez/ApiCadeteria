@@ -1,68 +1,26 @@
 const express = require("express");
-const { StatusCodes } = require("http-status-codes");
 const router = express.Router();
-const { envios } = require("../models/bd");
-const { getISODate } = require("../utils/date");
 const { authMiddleware } = require("../../middlewares/auth.middleware");
-const { envioSchema } = require("../validators/schemas");
+const {
+  registerEnvio,
+  getAllEnvios,
+  getEnvioById,
+  deleteEnvio,
+} = require("../controllers/envios.controller");
 
 // Aplicar middleware de autenticación a todas las rutas privadas
 router.use(authMiddleware);
 
 // Endpoint para agregar un nuevo env�o
-router.post("/envios", (req, res) => {
-  if (!req.body) {
-    return res.status(StatusCodes.BAD_REQUEST).json({
-      error: "El body de la solicitud no puede estar vacío",
-    });
-  }
+router.post("/envios", registerEnvio);
 
-  // Validar con Joi
-  const { error } = envioSchema.validate(req.body);
+// Listado envios admin
+router.get("/envios", getAllEnvios);
 
-  if (error) {
-    console.log(error);
-    const errorMessage = error.details[0].message;
-    return res.status(StatusCodes.BAD_REQUEST).json({
-      error: "bad_request",
-      message: errorMessage,
-    });
-  }
+router.get("/envios/:id", getEnvioById);
 
-  const {
-    clienteId,
-    origen,
-    destino,
-    fechaRetiro,
-    horaRetiroAprox,
-    tamanoPaquete,
-    notas,
-    categoria,
-  } = req.body;
+// router.put("/envios/:id", getEnvioById);
 
-  // Crear nuevo envío
-  const nuevoEnvio = {
-    enviosId: envios.length > 0 ? envios[envios.length - 1].enviosId + 1 : 1,
-    clienteId,
-    origen,
-    destino,
-    fechaRetiro,
-    horaRetiroAprox: horaRetiroAprox || "Sin especificar",
-    tamanoPaquete,
-    notas: notas || "",
-    categoria: categoria || { nombre: "General", descripcion: "Envio general" },
-    estado: "pendiente",
-    creadoEn: getISODate(),
-  };
-
-  // Agregar a la lista de envíos
-  envios.push(nuevoEnvio);
-
-  // Respuesta exitosa
-  res.status(StatusCodes.CREATED).json({
-    message: "Envio creado exitosamente",
-    envio: nuevoEnvio,
-  });
-});
+router.delete("/envios/:id", deleteEnvio); // Eliminar envios
 
 module.exports = router;

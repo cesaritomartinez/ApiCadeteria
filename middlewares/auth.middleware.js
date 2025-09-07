@@ -8,7 +8,7 @@ const authMiddleware = (req, res, next) => {
   if (!token) {
     res
       .status(StatusCodes.UNAUTHORIZED)
-      .json(createError("unathorized", "Auth token was not privided"));
+      .json(createError("unauthorized", "Auth token was not provided"));
     console.log("No hay token");
     return;
   }
@@ -17,7 +17,7 @@ const authMiddleware = (req, res, next) => {
     // llevar a .env
     res
       .status(StatusCodes.UNAUTHORIZED)
-      .json(createError("unathorized", "Invalid token"));
+      .json(createError("unauthorized", "Invalid token"));
     console.log("Token no valido");
     return;
   }

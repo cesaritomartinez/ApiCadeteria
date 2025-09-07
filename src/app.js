@@ -21,13 +21,13 @@ app.use((req, res) => {
 });
 
 // Errores 500 - Internal Server Error
-// app.use((err, req, res, next) => {
-//   console.error(err.stack);
-//   res.status(500).json({
-//     error: "Error interno del servidor",
-//     message: err.message,
-//   });
-// });
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    error: "Error interno del servidor",
+    message: err.message,
+  });
+});
 
 app.listen(3000, () => {
   console.log("Api escuchando en el puerto 3000");
