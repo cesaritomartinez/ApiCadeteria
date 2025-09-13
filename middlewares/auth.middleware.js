@@ -1,5 +1,6 @@
 const { StatusCodes } = require("http-status-codes");
 const { createError } = require("../src/utils/error");
+const jwt = require("jsonwebtoken");
 
 const authMiddleware = (req, res, next) => {
   //headers
@@ -13,17 +14,18 @@ const authMiddleware = (req, res, next) => {
     return;
   }
 
-  if (token !== "clavesecreta") {
-    // llevar a .env
+  try {
+    const verifiedJWT = jwt.verify(token, process.env.JWT_SECRET);
+    req.userId = verifiedJWT.userId;
+    req.userRole = verifiedJWT.role;
+    console.log("devolucion token:", verifiedJWT);
+    next();
+  } catch (error) {
     res
       .status(StatusCodes.UNAUTHORIZED)
-      .json(createError("unauthorized", "Invalid token"));
-    console.log("Token no valido");
+      .json(createError("unauthorized", "Invalid jwt"));
     return;
   }
-
-  console.log("Token correcto.");
-  next();
 };
 
 module.exports = { authMiddleware };

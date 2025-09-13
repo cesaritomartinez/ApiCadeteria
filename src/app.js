@@ -1,13 +1,18 @@
 const express = require("express");
 const app = express();
 const { StatusCodes } = require("http-status-codes");
+require("dotenv").config();
 
 const publicRouter = require("./routes/public.router");
 const privateRouter = require("./routes/private.router");
+const loginRouter = require("./routes/login.router");
+const signupRouter = require("./routes/signup.router");
 
 app.use(express.json());
 
 // Rutas públicas
+app.use("/public/v1", signupRouter);
+app.use("/public/v1", loginRouter);
 app.use(publicRouter);
 // Rutas privadas + middleware de autenticación dentro
 app.use("/v1", privateRouter);
@@ -29,6 +34,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(3000, () => {
-  console.log("Api escuchando en el puerto 3000");
+app.listen(process.env.PORT, async () => {
+  console.log(`Api escuchando en el puerto ${process.env.PORT}...`);
 });

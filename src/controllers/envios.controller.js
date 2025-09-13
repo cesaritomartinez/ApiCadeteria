@@ -1,7 +1,13 @@
 const { envioSchema } = require("../validators/schemas");
 const { createError } = require("../utils/error");
 const { StatusCodes } = require("http-status-codes");
-const { envios, findEnvioById, createEnvio, deleteEnvioById } = require("../models/bd");
+const {
+  envios,
+  findEnvioById,
+  createEnvio,
+  deleteEnvioById,
+  updateEnvioService
+} = require("../models/bd");
 const { getISODate } = require("../utils/date");
 
 const registerEnvio = (req, res) => {
@@ -58,14 +64,24 @@ const registerEnvio = (req, res) => {
 };
 
 const getAllEnvios = (req, res) => {
-  if (envios.length === 0) {
+  let enviosFiltrados;
+
+  // Si es admin, mostrar todos los envíos
+  if (req.userRole === "admin") {
+    enviosFiltrados = envios;
+  } else {
+    // Si es cliente, mostrar solo sus envíos
+    enviosFiltrados = envios.filter(envio => envio.userId === req.userId);
+  }
+
+  if (enviosFiltrados.length === 0) {
     return res
       .status(StatusCodes.NOT_FOUND)
       .json(createError("not_found", "No se encontraron envíos"));
   }
 
   return res.status(StatusCodes.OK).json({
-    envios,
+    envios: enviosFiltrados,
   });
 };
 
@@ -121,4 +137,62 @@ const deleteEnvio = (req, res) => {
   });
 };
 
-module.exports = { registerEnvio, getAllEnvios, getEnvioById, deleteEnvio };
+const updateEnvio = (req, res) => {
+  const envioId = Number(req.params.id);
+
+  if (isNaN(envioId)) {
+    res
+      .status(StatusCodes.BAD_REQUEST)
+      .json(createError("bad_request", "ID must be a number"));
+    return;
+  }
+
+  const { fechaRetiro, horaRetiroAprox, notas, estado } = req.body;
+
+  if (
+    [fechaRetiro, horaRetiroAprox, notas, estado].every((v) => v === undefined)
+  ) {
+    res
+      .status(StatusCodes.BAD_REQUEST)
+      .json(
+        createError(
+          "bad_request",
+          "You must send at least one property: fechaRetiro, horaRetiroAprox, notas, or estado."
+        )
+      );
+    return;
+  }
+
+  const envioUpdated = updateEnvioService(
+    envioId,
+    fechaRetiro,
+    horaRetiroAprox,
+    notas,
+    estado
+  );
+
+  if (!envioUpdated) {
+    res
+      .status(StatusCodes.NOT_FOUND)
+      .json(createError("not_found", `Envio with ID ${envioId} not found`));
+    return;
+  }
+
+  if (envioUpdated.error) {
+    // por si la service devuelve errores de validación
+    res
+      .status(StatusCodes.BAD_REQUEST)
+      .json(createError("bad_request", envioUpdated.messages.join("; ")));
+    return;
+  }
+
+  return res.status(StatusCodes.OK).json(envioUpdated);
+};
+
+module.exports = {
+  registerEnvio,
+  getAllEnvios,
+  getEnvioById,
+  deleteEnvio,
+  updateEnvio,
+};

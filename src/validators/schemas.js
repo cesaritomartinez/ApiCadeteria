@@ -9,10 +9,10 @@ const registerSchema = Joi.object({
   confirmPassword: Joi.string().min(4).required().valid(Joi.ref("password")),
 });
 
-const loginSchema = Joi.object({
-  email: Joi.string().email().required(),
-  password: Joi.string().min(4).required(),
-});
+// const loginSchema = Joi.object({
+//   email: Joi.string().email().required(),
+//   password: Joi.string().min(4).required(),
+// });
 
 const envioSchema = Joi.object({
   userId: Joi.number().integer().positive().required(),
@@ -26,8 +26,12 @@ const envioSchema = Joi.object({
     numero: Joi.number().integer().positive().required(),
     ciudad: Joi.string().min(2).max(50).required(),
   }).required(),
-  fechaRetiro: Joi.string().pattern(/^\d{2}\/\d{2}\/\d{4}$/).required(),
-  horaRetiroAprox: Joi.string().pattern(/^\d{2}:\d{2}$/).optional(),
+  fechaRetiro: Joi.string()
+    .pattern(/^\d{2}\/\d{2}\/\d{4}$/)
+    .required(),
+  horaRetiroAprox: Joi.string()
+    .pattern(/^\d{2}:\d{2}$/)
+    .optional(),
   tamanoPaquete: Joi.string().valid("chico", "mediano", "grande").required(),
   notas: Joi.string().max(200).optional().allow(""),
   categoria: Joi.object({
@@ -36,4 +40,4 @@ const envioSchema = Joi.object({
   }).optional(),
 });
 
-module.exports = { registerSchema, loginSchema, envioSchema };
+module.exports = { registerSchema, envioSchema };

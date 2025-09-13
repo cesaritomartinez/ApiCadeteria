@@ -1,4 +1,5 @@
 const { getISODate } = require("../utils/date");
+const bcrypt = require("bcrypt");
 
 let userId = 1;
 let envioId = 1;
@@ -7,7 +8,7 @@ const usuarios = [
   {
     id: userId++,
     username: "admin",
-    password: "admin123",
+    password: "$2b$10$kTM4XRKFnMfNZSBkrVCH8eNzwbsuYXd.YyHkXkYgcMzCB63aEaUQW",
     nombre: "Admin",
     apellido: "Principal",
     email: "admin@cadeteria.com",
@@ -20,7 +21,7 @@ const usuarios = [
     nombre: "Juan",
     apellido: "Pérez",
     email: "juanperez@example.com",
-    password: "1234",
+    password: "$2b$10$kTM4XRKFnMfNZSBkrVCH8eNzwbsuYXd.YyHkXkYgcMzCB63aEaUQW",
     role: "cliente",
     plan: "plus",
     createdAt: "2025-09-06",
@@ -31,7 +32,7 @@ const usuarios = [
     nombre: "María",
     apellido: "Gómez",
     email: "mariagomez@example.com",
-    password: "abcd",
+    password: "$2b$10$kTM4XRKFnMfNZSBkrVCH8eNzwbsuYXd.YyHkXkYgcMzCB63aEaUQW",
     role: "cliente",
     plan: "premium",
     createdAt: "2025-09-06",
@@ -42,7 +43,7 @@ const usuarios = [
     nombre: "Pedro",
     apellido: "Rodríguez",
     email: "pedrorodriguez@example.com",
-    password: "pass",
+    password: "$2b$10$kTM4XRKFnMfNZSBkrVCH8eNzwbsuYXd.YyHkXkYgcMzCB63aEaUQW",
     role: "cliente",
     plan: "plus",
     createdAt: "2025-09-06",
@@ -53,7 +54,7 @@ const usuarios = [
     nombre: "Laura",
     apellido: "Fernández",
     email: "laurafernandez@example.com",
-    password: "laura",
+    password: "$2b$10$kTM4XRKFnMfNZSBkrVCH8eNzwbsuYXd.YyHkXkYgcMzCB63aEaUQW",
     role: "cliente",
     plan: "premium",
     createdAt: "2025-09-06",
@@ -64,7 +65,7 @@ const usuarios = [
     nombre: "Carlos",
     apellido: "López",
     email: "carloslopez@example.com",
-    password: "carlos",
+    password: "$2b$10$kTM4XRKFnMfNZSBkrVCH8eNzwbsuYXd.YyHkXkYgcMzCB63aEaUQW",
     role: "cliente",
     plan: "plus",
     createdAt: "2025-09-06",
@@ -230,11 +231,11 @@ const envios = [
 
 // metodos de la base de datos
 //find
-//si no encuentro el todo, devuelve: undefined
+//si no encuentro el Envio, devuelve: undefined
 const findEnvioById = (id) =>
   envios.find((envio) => envio.envioId === Number(id));
 
-//delete todo by id
+//delete Envio by id
 const deleteEnvioById = (id) => {
   //findIndex( true/false )
   const indexToDelete = envios.findIndex(
@@ -250,7 +251,7 @@ const deleteEnvioById = (id) => {
   return true;
 };
 
-//create new todo
+//create new Envio
 const createEnvio = (
   userId,
   origen,
@@ -279,7 +280,13 @@ const createEnvio = (
   return newEnvio;
 };
 
-const updateEnvio = (id, completed) => {
+const updateEnvioService = (
+  id,
+  fechaRetiro,
+  horaRetiroAprox,
+  notas,
+  estado
+) => {
   const indexToUpdate = envios.findIndex(
     (envio) => envio.envioId === Number(id)
   );
@@ -289,9 +296,77 @@ const updateEnvio = (id, completed) => {
   }
 
   //ACTUALIZAR LO NECESARIO DEL ENVIO ACA
-  envios[indexToUpdate].completed = completed;
+  envios[indexToUpdate].fechaRetiro = fechaRetiro;
+  envios[indexToUpdate].horaRetiroAprox = horaRetiroAprox;
+  envios[indexToUpdate].notas = notas;
+  envios[indexToUpdate].estado = estado;
   return envios[indexToUpdate];
 };
+
+const doLogin = async ({ username, password }) => {
+  const user = getUserByUsername(username);
+
+  if (!user) {
+    return null;
+  }
+
+  //bcrypt.compare(string, hashed) // true o false
+  //abc.123
+  const compareResult = await bcrypt.compare(password, user.password);
+
+  if (!compareResult) {
+    return null;
+  }
+
+  return {
+    username: user.username,
+    name: user.nombre,
+    userId: user.id,
+    role: user.role,
+  };
+};
+
+// {
+//   id: userId++,
+//   username: "carloslopez",
+//   nombre: "Carlos",
+//   apellido: "López",
+//   email: "carloslopez@example.com",
+//   password: "carlos",
+//   role: "cliente",
+//   plan: "plus",
+//   createdAt: "2025-09-06",
+// }
+
+const createUser = async ({ username, password, name, lastname, email }) => {
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  let newUser = {
+    id: userId++,
+    username: username,
+    nombre: name,
+    apellido: lastname,
+    email: email,
+    password: hashedPassword,
+    role: "cliente",
+    plan: "plus",
+    createdAt: getISODate(),
+  };
+
+  /* let newUser = { ...body, id: userId++, active: true } */
+  usuarios.push(newUser);
+
+  console.log(usuarios);
+
+  let userResponse = { ...newUser };
+  //sacamos las propiedades password y ID que devolvemos en la respuesta
+  // delete userResponse.password;
+  delete userResponse.id;
+  return userResponse;
+};
+
+const getUserByUsername = (username) =>
+  usuarios.find((user) => user.username === username);
 
 module.exports = {
   envios,
@@ -299,5 +374,8 @@ module.exports = {
   createEnvio,
   findEnvioById,
   deleteEnvioById,
-  updateEnvio,
+  updateEnvioService,
+  createUser,
+  doLogin,
+  getUserByUsername,
 };
