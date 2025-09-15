@@ -15,7 +15,7 @@ const registerSchema = Joi.object({
 // });
 
 const envioSchema = Joi.object({
-  userId: Joi.number().integer().positive().required(),
+  // userId: Joi.number().integer().positive().required(),
   origen: Joi.object({
     calle: Joi.string().min(2).max(100).required(),
     numero: Joi.number().integer().positive().required(),

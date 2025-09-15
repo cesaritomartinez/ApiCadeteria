@@ -8,7 +8,7 @@ const usuarios = [
   {
     id: userId++,
     username: "admin",
-    password: "$2b$10$kTM4XRKFnMfNZSBkrVCH8eNzwbsuYXd.YyHkXkYgcMzCB63aEaUQW",
+    password: "$2b$10$3kcU5D9PYzV1ehRrr3mnZuGq7GY8eHWN6mkzLQN.7B9mT6Y1AIBX6",
     nombre: "Admin",
     apellido: "Principal",
     email: "admin@cadeteria.com",
@@ -21,7 +21,7 @@ const usuarios = [
     nombre: "Juan",
     apellido: "Pérez",
     email: "juanperez@example.com",
-    password: "$2b$10$kTM4XRKFnMfNZSBkrVCH8eNzwbsuYXd.YyHkXkYgcMzCB63aEaUQW",
+    password: "$2b$10$3kcU5D9PYzV1ehRrr3mnZuGq7GY8eHWN6mkzLQN.7B9mT6Y1AIBX6",
     role: "cliente",
     plan: "plus",
     createdAt: "2025-09-06",
@@ -32,7 +32,7 @@ const usuarios = [
     nombre: "María",
     apellido: "Gómez",
     email: "mariagomez@example.com",
-    password: "$2b$10$kTM4XRKFnMfNZSBkrVCH8eNzwbsuYXd.YyHkXkYgcMzCB63aEaUQW",
+    password: "$2b$10$3kcU5D9PYzV1ehRrr3mnZuGq7GY8eHWN6mkzLQN.7B9mT6Y1AIBX6",
     role: "cliente",
     plan: "premium",
     createdAt: "2025-09-06",
@@ -43,7 +43,7 @@ const usuarios = [
     nombre: "Pedro",
     apellido: "Rodríguez",
     email: "pedrorodriguez@example.com",
-    password: "$2b$10$kTM4XRKFnMfNZSBkrVCH8eNzwbsuYXd.YyHkXkYgcMzCB63aEaUQW",
+    password: "$2b$10$3kcU5D9PYzV1ehRrr3mnZuGq7GY8eHWN6mkzLQN.7B9mT6Y1AIBX6",
     role: "cliente",
     plan: "plus",
     createdAt: "2025-09-06",
@@ -54,7 +54,7 @@ const usuarios = [
     nombre: "Laura",
     apellido: "Fernández",
     email: "laurafernandez@example.com",
-    password: "$2b$10$kTM4XRKFnMfNZSBkrVCH8eNzwbsuYXd.YyHkXkYgcMzCB63aEaUQW",
+    password: "$2b$10$3kcU5D9PYzV1ehRrr3mnZuGq7GY8eHWN6mkzLQN.7B9mT6Y1AIBX6",
     role: "cliente",
     plan: "premium",
     createdAt: "2025-09-06",
@@ -65,7 +65,7 @@ const usuarios = [
     nombre: "Carlos",
     apellido: "López",
     email: "carloslopez@example.com",
-    password: "$2b$10$kTM4XRKFnMfNZSBkrVCH8eNzwbsuYXd.YyHkXkYgcMzCB63aEaUQW",
+    password: "$2b$10$3kcU5D9PYzV1ehRrr3mnZuGq7GY8eHWN6mkzLQN.7B9mT6Y1AIBX6",
     role: "cliente",
     plan: "plus",
     createdAt: "2025-09-06",
@@ -78,7 +78,7 @@ const envios = [
     userId: 2,
     origen: { calle: "Av. 18 de Julio", numero: 1234, ciudad: "Montevideo" },
     destino: { calle: "Colonia", numero: 567, ciudad: "Montevideo" },
-    fechaRetiro: "2025-09-06",
+    fechaRetiro: "2025-09-26",
     horaRetiroAprox: "12:00",
     tamanoPaquete: "chico",
     notas: "Sobre con documentación",
@@ -312,8 +312,10 @@ const doLogin = async ({ username, password }) => {
 
   //bcrypt.compare(string, hashed) // true o false
   //abc.123
+  console.log(user.password);
+  console.log(password)
   const compareResult = await bcrypt.compare(password, user.password);
-
+console.log(compareResult);
   if (!compareResult) {
     return null;
   }
