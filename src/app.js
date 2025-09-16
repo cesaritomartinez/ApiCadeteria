@@ -7,6 +7,8 @@ const publicRouter = require("./routes/public.router");
 const privateRouter = require("./routes/private.router");
 const loginRouter = require("./routes/login.router");
 const signupRouter = require("./routes/signup.router");
+const swagger = require('swagger-ui-express');
+const swaggerJsonDoc = require('./documentation/swagger.json');
 
 app.use(express.json());
 
@@ -14,6 +16,7 @@ app.use(express.json());
 app.use("/public/v1", signupRouter);
 app.use("/public/v1", loginRouter);
 app.use(publicRouter);
+app.use("/public/api-docs", swagger.serve, swagger.setup(swaggerJsonDoc));
 // Rutas privadas + middleware de autenticación dentro
 app.use("/v1", privateRouter);
 
@@ -33,6 +36,7 @@ app.use((err, req, res, next) => {
     message: err.message,
   });
 });
+
 
 app.listen(process.env.PORT, async () => {
   console.log(`Api escuchando en el puerto ${process.env.PORT}...`);

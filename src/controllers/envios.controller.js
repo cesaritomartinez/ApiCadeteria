@@ -9,8 +9,14 @@ const {
   updateEnvioService
 } = require("../models/bd");
 const { getISODate } = require("../utils/date");
+const { parseToDate } = require("../utils/date");
+const { shouldBlockCancellation } = require("../utils/date");
+const { startOfDay } = require("../utils/date");
 
 const registerEnvio = (req, res) => {
+
+  const authUserId = req.userId; // capturo el userId del token
+
   if (!req.body) {
     return res
       .status(StatusCodes.BAD_REQUEST)
@@ -34,7 +40,7 @@ const registerEnvio = (req, res) => {
   }
 
   const {
-    userId,
+    // userId,
     origen,
     destino,
     fechaRetiro,
@@ -46,7 +52,7 @@ const registerEnvio = (req, res) => {
 
   // Crear nuevo envío
   const envio = createEnvio(
-    userId,
+    authUserId,
     origen,
     destino,
     fechaRetiro,
@@ -104,6 +110,16 @@ const getEnvioById = (req, res) => {
       .json(createError("not_found", "Envio no encontrado"));
   }
 
+  const role = (req.userRole);
+  const requesterId = (Number(req.userId));
+
+  if (role !== "admin" && envio.userId !== requesterId) {
+    return res
+      .status(StatusCodes.FORBIDDEN)
+      .json(createError("forbidden", "No tenés permisos para ver este envío"));
+  }
+
+
   return res.status(StatusCodes.OK).json({
     envio,
   });
@@ -118,24 +134,65 @@ const deleteEnvio = (req, res) => {
       .json(createError("bad_request", "ID inválido"));
   }
 
+  // buscar envio a borrar
   const envio = findEnvioById(id);
-
-  console.log("antes", envios.length);
-
-  deleteEnvioById(id);
-
-  console.log("despues", envios.length);
-
-  if (!envio || envio.length === 0) {
+  if (!envio) {
     return res
       .status(StatusCodes.NOT_FOUND)
       .json(createError("not_found", "Envio no encontrado"));
   }
 
-  return res.status(StatusCodes.OK).json({
-    envio,
-  });
+  //  permisos: admin borra todo; cliente solo si es suyo
+  const role = String(req.userRole);
+  const requesterId = Number(req.userId);
+  if (role !== "admin" && envio.userId !== requesterId) {
+    return res
+      .status(StatusCodes.FORBIDDEN)
+      .json(createError("forbidden", "No tenés permisos para eliminar este envío"));
+  }
+
+  // regla para clientes: solo antes del día de retiro (no el mismo día)
+   if (role !== "admin") {
+    const block = shouldBlockCancellation(envio.fechaRetiro);
+    if (block === null) {
+      // Fecha con formato inválido almacenada en el envío
+      return res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json(createError("server_error", "Fecha de retiro inválida en el envío"));
+    }
+
+    if (block) {
+      return res
+        .status(StatusCodes.CONFLICT)
+        .json(
+          createError(
+            "conflict",
+            "No podés cancelar el envío el día del retiro o posteriormente"
+          )
+        );
+    }
+  }
+
+
+
+  
+
+  console.log("antes", envios.length);
+
+  // deleteEnvioById(id);
+
+  console.log("despues", envios.length);
+
+  const ok = deleteEnvioById(id);
+  if (!ok) {
+    return res
+      .status(StatusCodes.NOT_FOUND)
+      .json(createError("not_found", "Envio no encontrado"));
+  }
+
+  return res.status(StatusCodes.NO_CONTENT).end(); // 204 sin body
 };
+
 
 const updateEnvio = (req, res) => {
   const envioId = Number(req.params.id);
@@ -146,6 +203,25 @@ const updateEnvio = (req, res) => {
       .json(createError("bad_request", "ID must be a number"));
     return;
   }
+
+   // Buscar primeroel envio que vamos a modificar
+  const envioActual = findEnvioById(envioId);
+  if (!envioActual) {
+    return res
+      .status(StatusCodes.NOT_FOUND)
+      .json(createError("not_found", "Envio no encontrado"));
+  }
+
+  // Autorización: admin puede todo; cliente solo si es suyo
+  const role = String(req.userRole);
+  const requesterId = Number(req.userId);
+  if (role !== "admin" && envioActual.userId !== requesterId) {
+    return res
+      .status(StatusCodes.FORBIDDEN)
+      .json(createError("forbidden", "No tenés permisos para modificar este envío"));
+  }
+
+
 
   const { fechaRetiro, horaRetiroAprox, notas, estado } = req.body;
 
@@ -162,6 +238,8 @@ const updateEnvio = (req, res) => {
       );
     return;
   }
+
+ 
 
   const envioUpdated = updateEnvioService(
     envioId,

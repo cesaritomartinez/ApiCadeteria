@@ -1,0 +1,245 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "API Cadetería",
+    "description": "API de ejemplo para gestión de envíos (auth + envíos).",
+    "version": "1.0.0"
+  },
+  "servers": [
+    { "url": "http://localhost:3000", "description": "Development server" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "jwtAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "authorization",
+        "description": "Enviar JWT en el header 'authorization'. Ej: 'Bearer eyJ...'"
+      }
+    },
+    "schemas": {
+      "Direccion": {
+        "type": "object",
+        "required": ["calle","numero","ciudad"],
+        "properties": {
+          "calle": { "type": "string", "example": "Av. 18 de Julio" },
+          "numero": { "type": "integer", "example": 1234 },
+          "ciudad": { "type": "string", "example": "Montevideo" }
+        }
+      },
+      "Categoria": {
+        "type": "object",
+        "properties": {
+          "nombre": { "type": "string", "example": "Documentación" },
+          "descripcion": { "type": "string", "example": "Papeles, sobres, contratos" }
+        }
+      },
+      "Envio": {
+        "type": "object",
+        "properties": {
+          "envioId": { "type": "integer", "example": 1 },
+          "userId": { "type": "integer", "example": 2 },
+          "origen": { "$ref": "#/components/schemas/Direccion" },
+          "destino": { "$ref": "#/components/schemas/Direccion" },
+          "fechaRetiro": { "type": "string", "example": "2025-09-06" },
+          "horaRetiroAprox": { "type": "string", "example": "12:00" },
+          "tamanoPaquete": { "type": "string", "enum": ["chico","mediano","grande"] },
+          "notas": { "type": "string", "example": "Entrega rápida" },
+          "categoria": { "$ref": "#/components/schemas/Categoria" },
+          "estado": { "type": "string", "example": "pendiente" }
+        }
+      },
+      "EnvioCreateRequest": {
+        "type": "object",
+        "required": ["origen","destino","fechaRetiro","tamanoPaquete"],
+        "properties": {
+          "userId": { "type": "integer", "example": 2 },
+          "origen": { "$ref": "#/components/schemas/Direccion" },
+          "destino": { "$ref": "#/components/schemas/Direccion" },
+          "fechaRetiro": { "type": "string", "description": "Tu Joi valida dd/MM/yyyy", "example": "06/09/2025" },
+          "horaRetiroAprox": { "type": "string", "example": "12:00" },
+          "tamanoPaquete": { "type": "string", "enum": ["chico","mediano","grande"] },
+          "notas": { "type": "string", "example": "Sobre con documentación" },
+          "categoria": { "$ref": "#/components/schemas/Categoria" }
+        }
+      },
+      "EnvioUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "fechaRetiro": { "type": "string", "example": "2025-09-07" },
+          "horaRetiroAprox": { "type": "string", "example": "14:30" },
+          "notas": { "type": "string", "example": "Actualizar notas" },
+          "estado": { "type": "string", "example": "en_ruta" }
+        }
+      },
+      "UserSignupRequest": {
+        "type": "object",
+        "required": ["username","password","name","lastname","email"],
+        "properties": {
+          "username": { "type": "string", "example": "cesarito" },
+          "password": { "type": "string", "example": "abc.123" },
+          "name": { "type": "string", "example": "César" },
+          "lastname": { "type": "string", "example": "Martínez" },
+          "email": { "type": "string", "format": "email", "example": "cesar@mail.com" }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["username","password"],
+        "properties": {
+          "username": { "type": "string", "example": "laurafernandez" },
+          "password": { "type": "string", "example": "laura" }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "token": { "type": "string", "example": "Bearer eyJhbGciOi..." },
+          "user": {
+            "type": "object",
+            "properties": {
+              "username": { "type": "string" },
+              "name": { "type": "string" },
+              "userId": { "type": "integer" },
+              "role": { "type": "string", "example": "cliente" }
+            }
+          }
+        }
+      },
+      "ErrorResponseBadRequest": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "bad_request" },
+          "message": { "type": "string", "example": "Detalle del error de validación" }
+        }
+      },
+      "ErrorResponseUnauthorized": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "unauthorized" },
+          "message": { "type": "string", "example": "Invalid JWT provided" }
+        }
+      },
+      "ErrorResponseNotFound": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "not_found" },
+          "message": { "type": "string", "example": "Recurso no encontrado" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/ping": {
+      "get": {
+        "summary": "Ping público",
+        "description": "Devuelve pong.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "message": { "type": "string", "example": "pong" } } } } }
+          }
+        }
+      }
+    },
+
+    "/public/v1/signup": {
+      "post": {
+        "summary": "Registro de usuario",
+        "description": "Crea un usuario (usa bcrypt y quita id/password en la respuesta).",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserSignupRequest" } } }
+        },
+        "responses": {
+          "201": { "description": "Usuario creado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserSignupRequest" } } } },
+          "400": { "description": "Validación fallida", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseBadRequest" } } } }
+        }
+      }
+    },
+
+    "/public/v1/loginReal": {
+      "post": {
+        "summary": "Login",
+        "description": "Devuelve JWT y datos básicos de usuario.",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "Login OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginResponse" } } } },
+          "400": { "description": "Body inválido", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseBadRequest" } } } },
+          "401": { "description": "Credenciales inválidas", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseUnauthorized" } } } }
+        }
+      }
+    },
+
+    "/v1/envios": {
+      "get": {
+        "summary": "Listar envíos",
+        "security": [{ "jwtAuth": [] }],
+        "responses": {
+          "200": { "description": "Array de envíos", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Envio" } } } } },
+          "401": { "description": "No autorizado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseUnauthorized" } } } }
+        }
+      },
+      "post": {
+        "summary": "Crear envío",
+        "security": [{ "jwtAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EnvioCreateRequest" } } }
+        },
+        "responses": {
+          "201": { "description": "Creado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Envio" } } } },
+          "400": { "description": "Validación fallida", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseBadRequest" } } } },
+          "401": { "description": "No autorizado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseUnauthorized" } } } }
+        }
+      }
+    },
+
+    "/v1/envios/{id}": {
+      "get": {
+        "summary": "Obtener envío por ID",
+        "security": [{ "jwtAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "id", "schema": { "type": "integer" }, "required": true, "description": "ID del envío" }
+        ],
+        "responses": {
+          "200": { "description": "Encontrado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Envio" } } } },
+          "404": { "description": "No encontrado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseNotFound" } } } },
+          "401": { "description": "No autorizado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseUnauthorized" } } } }
+        }
+      },
+      "put": {
+        "summary": "Actualizar envío",
+        "security": [{ "jwtAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "id", "schema": { "type": "integer" }, "required": true, "description": "ID del envío" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EnvioUpdateRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "Actualizado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Envio" } } } },
+          "400": { "description": "Validación fallida", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseBadRequest" } } } },
+          "404": { "description": "No encontrado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseNotFound" } } } },
+          "401": { "description": "No autorizado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseUnauthorized" } } } }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar envío",
+        "security": [{ "jwtAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "id", "schema": { "type": "integer" }, "required": true, "description": "ID del envío" }
+        ],
+        "responses": {
+          "204": { "description": "Eliminado" },
+          "404": { "description": "No encontrado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseNotFound" } } } },
+          "401": { "description": "No autorizado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseUnauthorized" } } } }
+        }
+      }
+    }
+  }
+}
