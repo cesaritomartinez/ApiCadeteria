@@ -85,7 +85,7 @@ const envios = [
     categoria: {
       nombre: "Documentación",
       descripcion: "Papeles, sobres, contratos",
-    }, // grande / chico / mediano
+    },
     estado: "pendiente",
   },
   {

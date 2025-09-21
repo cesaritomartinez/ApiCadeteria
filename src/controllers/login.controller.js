@@ -5,6 +5,9 @@ const loginSchema = require("../validators/login.schema");
 
 const { doLogin } = require("../models/bd");
 
+// (1) explicar
+const User = require("../models/user.model");
+
 const login = async (req, res) => {
   const { body } = req;
 
@@ -25,7 +28,12 @@ const login = async (req, res) => {
     return;
   }
 
-  const user = await doLogin(body);
+  const user = await User.findOne({ username: body.username });
+  // (1) const user = await doLogin(body);
+
+  console.log(user);
+
+  res.status(StatusCodes.OK).send();
 
   if (!user) {
     res

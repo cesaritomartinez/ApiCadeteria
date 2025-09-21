@@ -8,6 +8,8 @@ const privateRouter = require("./routes/private.router");
 const loginRouter = require("./routes/login.router");
 const signupRouter = require("./routes/signup.router");
 
+const connectMongoDB = require("./repositories/mongo.client");
+
 app.use(express.json());
 
 // Rutas públicas
@@ -34,6 +36,17 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(process.env.PORT, async () => {
-  console.log(`Api escuchando en el puerto ${process.env.PORT}...`);
-});
+(async () => {
+  try {
+    await connectMongoDB();
+    console.log("conexión mongoDB ok");
+
+    const port = process.env.PORT;
+    app.listen(port, () => {
+      console.log("App started and listening in port " + port);
+    });
+  } catch (error) {
+    console.log("Error conectando con mongoDB", error);
+    process.exit(1);
+  }
+})();
