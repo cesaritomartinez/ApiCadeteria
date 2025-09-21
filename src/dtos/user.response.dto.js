@@ -1,6 +1,15 @@
-const mongoose = require("mongoose");
-const userSchema = require("../repositories/user.schema");
+const buildUserDTOResponse = (user) => {
+  return {
+    id: user._id,
+    username: user.username,
+    email: user.email,
+    nombre: user.nombre,
+    apellido: user.apellido,
+    role: user.role,
+    plan: user.plan,
+    fechaCreacion: user.createdAt,
+    fechaActualizacion: user.updatedAt,
+  };
+};
 
-const User = mongoose.model("User", userSchema);
-
-module.exports = User;
+module.exports = buildUserDTOResponse;

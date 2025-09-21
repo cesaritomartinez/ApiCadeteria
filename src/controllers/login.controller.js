@@ -3,7 +3,7 @@ const StatusCodes = require("http-status-codes");
 const jwt = require("jsonwebtoken");
 const loginSchema = require("../validators/login.schema");
 
-const { doLogin } = require("../models/bd");
+const usersService = require("../services/users.service");
 
 // (1) explicar
 const User = require("../models/user.model");
@@ -28,21 +28,20 @@ const login = async (req, res) => {
     return;
   }
 
-  const user = await User.findOne({ username: body.username });
+  // (2) const user = await User.findOne({ username: body.username });
   // (1) const user = await doLogin(body);
+  const token = await usersService.doLogin(body);
 
-  console.log(user);
+  console.log(token);
 
-  res.status(StatusCodes.OK).send();
-
-  if (!user) {
+  if (!token) {
     res
       .status(StatusCodes.UNAUTHORIZED)
-      .json(createError("unathorize", "Invalid credentials"));
+      .json(createError("unauthorized", "Invalid credentials"));
     return;
   }
 
-  const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: "1h" });
+  // const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: "1h" });
 
   res.status(StatusCodes.OK).json({ token: token });
 };

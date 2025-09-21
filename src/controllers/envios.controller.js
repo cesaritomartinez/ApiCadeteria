@@ -6,7 +6,7 @@ const {
   findEnvioById,
   createEnvio,
   deleteEnvioById,
-  updateEnvioService
+  updateEnvioService,
 } = require("../models/bd");
 const { getISODate } = require("../utils/date");
 
@@ -71,7 +71,7 @@ const getAllEnvios = (req, res) => {
     enviosFiltrados = envios;
   } else {
     // Si es cliente, mostrar solo sus envíos
-    enviosFiltrados = envios.filter(envio => envio.userId === req.userId);
+    enviosFiltrados = envios.filter((envio) => envio.userId === req.userId);
   }
 
   if (enviosFiltrados.length === 0) {
@@ -196,3 +196,127 @@ module.exports = {
   deleteEnvio,
   updateEnvio,
 };
+
+// Controller del repo del profe para mudar :
+
+// const bd = require("../models/bd");
+// const { createError } = require("../utils/errors");
+// const StatusCodes = require("http-status-codes");
+// const createTodoSchema = require("../validators/create.todo.schema");
+
+// const todosService = require("../services/todos.service");
+
+// const getTodos = async (req, res) => {
+//req.query
+/* 
+        if (req.query.completed !== undefined) {
+            console.log("existe el query param")
+            const completedBool = req.query.completed === "true"; //true - false
+            todos = todos.filter(todo => todo.completed === completedBool);
+        }
+     */
+//   try {
+//     let todos = await todosService.getTodosByUserId(req.userId);
+//     res.status(StatusCodes.OK).json(todos);
+//   } catch (error) {
+//     res
+//       .status(error.code || 500)
+//       .json(createError(error.status, error.message));
+//   }
+// };
+
+// const getTodoById = async (req, res) => {
+//   //capturar el ID que viene en la url /:id
+//   const todoId = req.params.id;
+//   console.log(todoId);
+
+//   try {
+//     const todo = await todosService.findTodoById(todoId, req.userId); //busco el todo en mi bd por id
+//     res.status(StatusCodes.OK).json(todo);
+//   } catch (error) {
+//     res
+//       .status(error.code || 500)
+//       .json(createError(error.status, error.message));
+//   }
+// };
+
+// const deleteTodo = async (req, res) => {
+//   const todoId = req.params.id;
+//   try {
+//     await todosService.deleteTodo(todoId, req.userId);
+//     res.status(StatusCodes.NO_CONTENT).send();
+//   } catch (error) {
+//     res
+//       .status(error.code || 500)
+//       .json(createError(error.status, error.message));
+//   }
+// };
+
+// const createTodo = async (req, res) => {
+//   //capturamos el body del request entrante
+
+//   const { body } = req;
+
+//   if (!body) {
+//     res
+//       .status(StatusCodes.BAD_REQUEST)
+//       .json(createError("bad_request", "Invalid body"));
+//     return;
+//   }
+
+//   const { error } = createTodoSchema.validate(body);
+
+//   if (error) {
+//     console.log(error);
+//     const errorMessage = error.details[0].message;
+//     res
+//       .status(StatusCodes.BAD_REQUEST)
+//       .json(createError("bad_request", errorMessage));
+//     return;
+//   }
+
+//   const { title, category } = body;
+
+//   try {
+//     const newTodo = await todosService.createTodo(title, category, req.userId);
+//     res.status(StatusCodes.CREATED).json(newTodo);
+//   } catch (error) {
+//     res
+//       .status(error.code || 500)
+//       .json(createError(error.status, error.message));
+//   }
+// };
+
+// const updateTodo = async (req, res) => {
+//   const todoId = req.params.id;
+
+//   const { completed } = req.body;
+
+//   if (completed === undefined) {
+//     res
+//       .status(StatusCodes.BAD_REQUEST)
+//       .json(createError("bad_request", "Missing completed property"));
+//     return;
+//   }
+
+//   try {
+//     const updatedTodo = await todosService.updateTodo(
+//       todoId,
+//       completed,
+//       req.userId
+//     );
+//     res.status(StatusCodes.OK).json(updatedTodo);
+//   } catch (error) {
+//     res
+//       .status(error.code || 500)
+//       .json(createError(error.status, error.message));
+//   }
+// };
+
+// module.exports = {
+//   getTodos,
+//   getTodoById,
+//   deleteTodo,
+//   createTodo,
+//   updateTodo,
+// };
