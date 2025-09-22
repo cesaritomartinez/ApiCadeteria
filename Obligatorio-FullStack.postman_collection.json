@@ -1,0 +1,417 @@
+{
+	"info": {
+		"_postman_id": "e2ae3bea-0c58-4036-932e-b583f72d5214",
+		"name": "Obligatorio-FullStack",
+		"description": "``` markdown\n# ⏺ API Cadetería - Documentación Postman\n## ⚙️ Configuración Base\n- **Base URL:** [http://localhost:3006](http://localhost:3006)  \n- **Content-Type:** `application/json`\n---\n## 🔐 Autenticación\n### 1. Registro de Usuario\n**POST** `/signup`\n**Body (JSON):**\n```json\n{\n  \"username\": \"sanei1509\",\n  \"password\": \"123456\",\n  \"nombre\": \"Santiago\",\n  \"apellido\": \"Neira\",\n  \"email\": \"santiago@gmail.com\"\n}\n\n ```\n\n**Respuesta exitosa (201):**\n\n``` json\n{\n  \"id\": \"68d050bff1cdd9a5d56e23e0\",\n  \"username\": \"sanei1509\",\n  \"email\": \"santiago@gmail.com\",\n  \"nombre\": \"Santiago\",\n  \"apellido\": \"Neira\",\n  \"role\": \"cliente\",\n  \"plan\": \"plus\",\n  \"fechaCreacion\": \"2025-09-21T19:23:43.245Z\",\n  \"fechaActualizacion\": \"2025-09-21T19:23:43.245Z\"\n}\n\n ```\n\n---\n\n### 2\\. Login de Usuario\n\n**POST** `/login`\n\n**Body (JSON):**\n\n``` json\n{\n  \"username\": \"sanei1509\",\n  \"password\": \"123456\"\n}\n\n ```\n\n**Respuesta exitosa (200):**\n\n``` json\n{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6...\"\n}\n\n ```\n\n⚠️ **Importante:** Copiar el token para usarlo en las siguientes peticiones.\n\n---\n\n## 📦 Gestión de Envíos (Requiere Autenticación)\n\nPara todas las peticiones de envíos, agregar el header:  \n`Authorization: [tu_token_aquí]`\n\n---\n\n### 1\\. Crear Envío\n\n**POST** `/envios`\n\n**Headers:**\n\n```\nAuthorization: eyJhbGciOiJIUzI1NiIsInR5cCI6...\nContent-Type: application/json\n\n ```\n\n**Body (JSON):**\n\n``` json\n{\n  \"origen\": {\n    \"calle\": \"Av. Corrientes\",\n    \"numero\": \"1234\",\n    \"ciudad\": \"Buenos Aires\",\n    \"referencia\": \"Cerca del teatro San Martín\"\n  },\n  \"destino\": {\n    \"calle\": \"Av. Santa Fe\",\n    \"numero\": \"5678\",\n    \"ciudad\": \"Buenos Aires\",\n    \"referencia\": \"Frente al shopping\"\n  },\n  \"fechaRetiro\": \"2025-09-25\",\n  \"horaRetiroAprox\": \"14:30\",\n  \"tamanoPaquete\": \"mediano\",\n  \"notas\": \"Frágil - manejar con cuidado\",\n  \"categoria\": {\n    \"nombre\": \"Documentos\",\n    \"descripcion\": \"Papeles importantes\"\n  }\n}\n\n ```\n\n**Campos obligatorios:**\n\n- `origen.calle`, `origen.ciudad`\n    \n- `destino.calle`, `destino.ciudad`\n    \n- `fechaRetiro` (fecha hoy o futura)\n    \n- `tamanoPaquete` (valores: `\"chico\"`, `\"mediano\"`, `\"grande\"`)\n    \n\n**Campos opcionales:**\n\n- `origen.numero`, `origen.referencia`\n    \n- `destino.numero`, `destino.referencia`\n    \n- `horaRetiroAprox` (formato HH:mm)\n    \n- `notas` (máximo 500 caracteres)\n    \n- `categoria`\n    \n\n---\n\n### 2\\. Obtener Todos los Envíos del Usuario\n\n**GET** `/envios`\n\n**Headers:**\n\n```\nAuthorization: [tu_token_aquí]\n\n ```\n\n---\n\n### 3\\. Obtener Envío por ID\n\n**GET** `/envios/:id`\n\n**Headers:**\n\n```\nAuthorization: [tu_token_aquí]\n\n ```\n\n**Ejemplo:**\n\n```\nGET /envios/68d051234567890abcdef123\n\n ```\n\n---\n\n### 4\\. Actualizar Envío\n\n**PUT** `/envios/:id`\n\n**Headers:**\n\n```\nAuthorization: [tu_token_aquí]\nContent-Type: application/json\n\n ```\n\n**Body (JSON):**\n\n``` json\n{\n  \"estado\": \"en_ruta\",\n  \"notas\": \"Notas actualizadas\",\n  \"fechaRetiro\": \"2025-09-26\"\n}\n\n ```\n\n**Estados válidos:**\n\n- `\"pendiente\"`\n    \n- `\"en_ruta\"`\n    \n- `\"entregado\"`\n    \n- `\"cancelado\"`\n    \n\n---\n\n### 5\\. Eliminar Envío\n\n**DELETE** `/envios/:id`\n\n**Headers:**\n\n```\nAuthorization: [tu_token_aquí]\n\n ```\n\n**Ejemplo:**\n\n```\nDELETE /envios/68d051234567890abcdef123\n\n ```\n\n**Respuesta exitosa (204):** Sin contenido\n\n---\n\n## 🔧 Configuración en Postman\n\n### Variables de Entorno\n\n| Variable | Valor |\n| --- | --- |\n| base_url | [http://localhost:3006](http://localhost:3006) |\n| auth_token | {{token_from_login}} |\n\n### Automatización del Token\n\nEn la pestaña **Tests** del request de **Login**, agregar:\n\n``` javascript\nif (pm.response.code === 200) {\n  const response = pm.response.json();\n  pm.environment.set(\"auth_token\", response.token);\n}\n\n ```\n\nLuego, en los headers de las peticiones protegidas usar:  \n`Authorization: {{auth_token}}`\n\n---\n\n## ❌ Códigos de Error Comunes\n\n| Código | Descripción | Solución |\n| --- | --- | --- |\n| 400 | Bad Request - Datos inválidos | Verificar el formato del JSON y campos requeridos |\n| 401 | Unauthorized - Token inválido | Hacer login y usar el token correcto |\n| 403 | Forbidden - Sin permisos | El envío no pertenece al usuario |\n| 404 | Not Found - Recurso no encontrado | Verificar que el ID del envío existe |\n| 409 | Conflict - Usuario ya existe | Usar un username diferente |\n| 500 | Internal Server Error | Error del servidor |\n\n---\n\n## 📝 Flujo Típico de Uso\n\n1. Registrarse: **POST** `/signup`\n    \n2. Hacer login: **POST** `/login` → Guardar token\n    \n3. Crear envío: **POST** `/envios` (con token)\n    \n4. Ver envíos: **GET** `/envios` (con token)\n    \n5. Actualizar envío: **PUT** `/envios/:id` (con token)\n    \n6. Eliminar envío: **DELETE** `/envios/:id` (con token)\n    \n\n---\n\n## 🚀 Tips para Testing\n\n- Usa **fechas futuras** para `fechaRetiro`.\n    \n- El formato de hora debe ser **HH:mm** (ej: `\"14:30\"`).\n    \n- Los tamaños válidos son: `\"chico\"`, `\"mediano\"`, `\"grande\"`.\n    \n- El token **expira en 1 hora**, hacer login nuevamente si es necesario.\n    \n- Solo puedes ver/editar/eliminar **tus propios envíos**.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12786936"
+	},
+	"item": [
+		{
+			"name": "Ping",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "Obligatorio-FullStack",
+					"host": [
+						"Obligatorio-FullStack"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Sign Up",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\" : \"sanei1509\",\n    \"nombre\": \"Santiago\",\n    \"apellido\": \"Neira\",\n    \"email\": \"santiagoneira52@gmail.com\",\n    \"password\" : \"1234\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/public/v1/signup",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"public",
+						"v1",
+						"signup"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"sanei1509\",\n    \"password\": \"1234\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/public/v1/loginReal",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"public",
+						"v1",
+						"loginReal"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "404",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/121321421",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"121321421"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "500",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{asdasdas",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/2213",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"2213"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Registrar Envio",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Cache-Control",
+						"value": "no-cache",
+						"name": "cache-control",
+						"type": "text"
+					},
+					{
+						"key": "Postman-Token",
+						"value": "<calculated when request is sent>",
+						"name": "postman-token",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"name": "content-type",
+						"type": "text"
+					},
+					{
+						"key": "Content-Length",
+						"value": "<calculated when request is sent>",
+						"name": "content-length",
+						"type": "text"
+					},
+					{
+						"key": "Host",
+						"value": "<calculated when request is sent>",
+						"name": "host",
+						"type": "text"
+					},
+					{
+						"key": "User-Agent",
+						"value": "PostmanRuntime/7.39.1",
+						"name": "user-agent",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "*/*",
+						"name": "accept",
+						"type": "text"
+					},
+					{
+						"key": "Accept-Encoding",
+						"value": "gzip, deflate, br",
+						"name": "accept-encoding",
+						"type": "text"
+					},
+					{
+						"key": "Connection",
+						"value": "keep-alive",
+						"name": "connection",
+						"type": "text"
+					},
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InNhbmVpMTUwOSIsIm5hbWUiOiJTYW50aWFnbyIsInVzZXJJZCI6IjY4ZDA1MGJmZjFjZGQ5YTVkNTZlMjNlMCIsImlhdCI6MTc1ODQ4MzkzNCwiZXhwIjoxNzU4NDg3NTM0fQ.Lg1A4FyGAXyXAHyrGsF5bXH75a2n3WZ8D4JpkIb93rM",
+						"type": "text"
+					},
+					{
+						"key": "",
+						"value": "",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"origen\": {\n    \"calle\": \"Avenida 18 de Julio\",\n    \"numero\": \"1234\",\n    \"ciudad\": \"Montevideo\"\n  },\n  \"destino\": {\n    \"calle\": \"Rambla República Argentina\",\n    \"numero\": \"5678\",\n    \"ciudad\": \"Punta Carretas\"\n  },\n  \"fechaRetiro\": \"10/09/2025\",\n  \"horaRetiroAprox\": \"14:30\",\n  \"tamanoPaquete\": \"mediano\",\n  \"notas\": \"Entregar en recepción, paquete frágil\",\n  \"categoria\": {\n    \"nombre\": \"Documentación\",\n    \"descripcion\": \"Carpeta con papeles importantes\"\n  }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/v1/envios",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"v1",
+						"envios"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetAllEnvios",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/envios",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"envios"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetEnvioById",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Cache-Control",
+						"value": "no-cache",
+						"name": "cache-control",
+						"type": "text"
+					},
+					{
+						"key": "Postman-Token",
+						"value": "<calculated when request is sent>",
+						"name": "postman-token",
+						"type": "text"
+					},
+					{
+						"key": "Host",
+						"value": "<calculated when request is sent>",
+						"name": "host",
+						"type": "text"
+					},
+					{
+						"key": "User-Agent",
+						"value": "PostmanRuntime/7.39.1",
+						"name": "user-agent",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "*/*",
+						"name": "accept",
+						"type": "text"
+					},
+					{
+						"key": "Accept-Encoding",
+						"value": "gzip, deflate, br",
+						"name": "accept-encoding",
+						"type": "text"
+					},
+					{
+						"key": "Connection",
+						"value": "keep-alive",
+						"name": "connection",
+						"type": "text"
+					},
+					{
+						"key": "authorization",
+						"value": "clavesecreta",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:3000/v1/envios/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"v1",
+						"envios",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DeleteEnvioById",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Cache-Control",
+						"value": "no-cache",
+						"name": "cache-control",
+						"type": "text"
+					},
+					{
+						"key": "Postman-Token",
+						"value": "<calculated when request is sent>",
+						"name": "postman-token",
+						"type": "text"
+					},
+					{
+						"key": "Host",
+						"value": "<calculated when request is sent>",
+						"name": "host",
+						"type": "text"
+					},
+					{
+						"key": "User-Agent",
+						"value": "PostmanRuntime/7.39.1",
+						"name": "user-agent",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "*/*",
+						"name": "accept",
+						"type": "text"
+					},
+					{
+						"key": "Accept-Encoding",
+						"value": "gzip, deflate, br",
+						"name": "accept-encoding",
+						"type": "text"
+					},
+					{
+						"key": "Connection",
+						"value": "keep-alive",
+						"name": "connection",
+						"type": "text"
+					},
+					{
+						"key": "authorization",
+						"value": "clavesecreta",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:3000/v1/envios/2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"v1",
+						"envios",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar Envio",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/v1/envios/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"v1",
+						"envios",
+						"1"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": "",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
