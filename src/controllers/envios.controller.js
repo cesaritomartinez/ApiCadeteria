@@ -29,7 +29,9 @@ const registerEnvio = async (req, res) => {
   } catch (error) {
     res
       .status(error.code || StatusCodes.INTERNAL_SERVER_ERROR)
-      .json(createError(error.status || "internal_server_error", error.message));
+      .json(
+        createError(error.status || "internal_server_error", error.message)
+      );
   }
 };
 
@@ -39,13 +41,19 @@ const getAllEnvios = async (req, res) => {
 
     // Si es admin, mostrar todos los envíos (implementar lógica admin después)
     // Por ahora, solo los envíos del usuario
-    envios = await enviosService.getEnviosByUserId(req.userId);
+    if (req.userRole === "admin") {
+      envios = await enviosService.getAllEnviosAdmin();
+    } else {
+      envios = await enviosService.getEnviosByUserId(req.userId);
+    }
 
     res.status(StatusCodes.OK).json(envios);
   } catch (error) {
     res
       .status(error.code || StatusCodes.INTERNAL_SERVER_ERROR)
-      .json(createError(error.status || "internal_server_error", error.message));
+      .json(
+        createError(error.status || "internal_server_error", error.message)
+      );
   }
 };
 
@@ -58,7 +66,9 @@ const getEnvioById = async (req, res) => {
   } catch (error) {
     res
       .status(error.code || StatusCodes.INTERNAL_SERVER_ERROR)
-      .json(createError(error.status || "internal_server_error", error.message));
+      .json(
+        createError(error.status || "internal_server_error", error.message)
+      );
   }
 };
 
@@ -71,7 +81,9 @@ const deleteEnvio = async (req, res) => {
   } catch (error) {
     res
       .status(error.code || StatusCodes.INTERNAL_SERVER_ERROR)
-      .json(createError(error.status || "internal_server_error", error.message));
+      .json(
+        createError(error.status || "internal_server_error", error.message)
+      );
   }
 };
 
@@ -82,17 +94,25 @@ const updateEnvio = async (req, res) => {
   if (!body || Object.keys(body).length === 0) {
     res
       .status(StatusCodes.BAD_REQUEST)
-      .json(createError("bad_request", "Must provide at least one field to update"));
+      .json(
+        createError("bad_request", "Must provide at least one field to update")
+      );
     return;
   }
 
   try {
-    const updatedEnvio = await enviosService.updateEnvio(envioId, body, req.userId);
+    const updatedEnvio = await enviosService.updateEnvio(
+      envioId,
+      body,
+      req.userId
+    );
     res.status(StatusCodes.OK).json(updatedEnvio);
   } catch (error) {
     res
       .status(error.code || StatusCodes.INTERNAL_SERVER_ERROR)
-      .json(createError(error.status || "internal_server_error", error.message));
+      .json(
+        createError(error.status || "internal_server_error", error.message)
+      );
   }
 };
 

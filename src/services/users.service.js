@@ -27,6 +27,7 @@ const doLogin = async ({ username, password }) => {
       username: user.username,
       name: user.nombre,
       userId: user._id.toString(),
+      role: user.role,
     },
     process.env.JWT_SECRET,
     {
@@ -43,7 +44,13 @@ const doLogin = async ({ username, password }) => {
   return { token: token, user: user };
 };
 
-const registerUser = async ({ username, password, nombre, apellido, email }) => {
+const registerUser = async ({
+  username,
+  password,
+  nombre,
+  apellido,
+  email,
+}) => {
   if (await getUserByUserName(username)) {
     let error = new Error("user already exists");
     error.status = "conflict";

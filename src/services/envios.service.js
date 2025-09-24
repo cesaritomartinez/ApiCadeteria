@@ -11,6 +11,22 @@ const findEnvioById = async (envioId, userId) => {
   }
 };
 
+const getAllEnviosAdmin = async () => {
+  try {
+    const allEnviosDB = await Envio.find();
+    let enviosResponse = allEnviosDB.map((envio) => {
+      return buildEnvioDTOResponse(envio);
+    });
+    return enviosResponse;
+  } catch (e) {
+    console.log("Error obteniendo todos los envios", e);
+    let error = new Error("error getting all envios");
+    error.status = "internal_server_error";
+    error.code = StatusCodes.INTERNAL_SERVER_ERROR;
+    throw error;
+  }
+};
+
 const getEnviosByUserId = async (userId) => {
   try {
     const userEnviosDB = await Envio.find({ user: userId });
@@ -103,6 +119,7 @@ const findEnvioByIdInDB = async (envioId, userId) => {
 module.exports = {
   findEnvioById,
   getEnviosByUserId,
+  getAllEnviosAdmin,
   deleteEnvio,
   createEnvio,
   updateEnvio,
