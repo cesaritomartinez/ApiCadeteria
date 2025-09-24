@@ -6,7 +6,7 @@ const {
   getAllEnvios,
   getEnvioById,
   deleteEnvio,
-  updateEnvio
+  updateEnvio,
 } = require("../controllers/envios.controller");
 
 // Aplicar middleware de autenticación a todas las rutas privadas
@@ -15,7 +15,7 @@ router.use(authMiddleware);
 // Endpoint para agregar un nuevo env�o
 router.post("/envios", registerEnvio);
 
-// Listado envios admin
+// Listado envios con filtros opcionales
 router.get("/envios", getAllEnvios);
 
 router.get("/envios/:id", getEnvioById);

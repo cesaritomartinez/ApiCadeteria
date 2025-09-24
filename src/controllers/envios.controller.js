@@ -38,6 +38,8 @@ const registerEnvio = async (req, res) => {
 const getAllEnvios = async (req, res) => {
   try {
     let envios;
+    let filtros = req.query;
+    let enviosFiltrados;
 
     // Si es admin, mostrar todos los envíos (implementar lógica admin después)
     // Por ahora, solo los envíos del usuario
@@ -47,7 +49,10 @@ const getAllEnvios = async (req, res) => {
       envios = await enviosService.getEnviosByUserId(req.userId);
     }
 
-    res.status(StatusCodes.OK).json(envios);
+    enviosFiltrados = enviosService.filtrarEnvios(envios, filtros);
+    console.log("Envios filtrados", enviosFiltrados);
+
+    res.status(StatusCodes.OK).json(enviosFiltrados);
   } catch (error) {
     res
       .status(error.code || StatusCodes.INTERNAL_SERVER_ERROR)

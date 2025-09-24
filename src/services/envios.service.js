@@ -17,6 +17,7 @@ const getAllEnviosAdmin = async () => {
     let enviosResponse = allEnviosDB.map((envio) => {
       return buildEnvioDTOResponse(envio);
     });
+
     return enviosResponse;
   } catch (e) {
     console.log("Error obteniendo todos los envios", e);
@@ -29,12 +30,15 @@ const getAllEnviosAdmin = async () => {
 
 const getEnviosByUserId = async (userId) => {
   try {
+    console.log("🔍 Buscando envíos para userId:", userId);
     const userEnviosDB = await Envio.find({ user: userId });
+    console.log("📦 Envíos encontrados en DB:", userEnviosDB.length);
 
     let enviosResponse = userEnviosDB.map((envio) => {
       return buildEnvioDTOResponse(envio);
     });
 
+    console.log("✅ Envíos después del DTO:", enviosResponse.length);
     return enviosResponse;
   } catch (e) {
     console.log("Error obteniendo envios del usuario", e);
@@ -116,6 +120,51 @@ const findEnvioByIdInDB = async (envioId, userId) => {
   return envio;
 };
 
+const filtrarEnvios = (envios, filtros) => {
+  let enviosFiltrados = envios;
+  console.log("🔍 Filtros recibidos:", filtros);
+  console.log("📦 Envíos antes del filtro:", enviosFiltrados.length);
+
+  // Filtrar por estado
+  if (filtros.estado) {
+    console.log("Filtrando por estado:", filtros.estado);
+    enviosFiltrados = enviosFiltrados.filter(
+      (envio) => envio.estado === filtros.estado
+    );
+    console.log("Envíos después de filtrar por estado:", enviosFiltrados.length);
+  }
+
+  // Filtrar por fecha específica
+  if (filtros.fecha) {
+    console.log("Filtrando por fecha:", filtros.fecha);
+    enviosFiltrados = enviosFiltrados.filter((envio) => {
+      const fechaEnvio = new Date(envio.fechaRetiro).toISOString().split('T')[0];
+      const fechaFiltro = filtros.fecha;
+      console.log(`Comparando: ${fechaEnvio} vs ${fechaFiltro} para envío ID: ${envio.id}`);
+      return fechaEnvio === fechaFiltro;
+    });
+    console.log("Envíos después de filtrar por fecha:", enviosFiltrados.length);
+  }
+
+  // Filtrar por rango de fechas
+  if (filtros.fechaDesde) {
+    const fechaDesde = new Date(filtros.fechaDesde);
+    enviosFiltrados = enviosFiltrados.filter(
+      (envio) => new Date(envio.fechaRetiro) >= fechaDesde
+    );
+  }
+
+  if (filtros.fechaHasta) {
+    const fechaHasta = new Date(filtros.fechaHasta);
+    fechaHasta.setHours(23, 59, 59, 999); // Hasta el final del día
+    enviosFiltrados = enviosFiltrados.filter(
+      (envio) => new Date(envio.fechaRetiro) <= fechaHasta
+    );
+  }
+
+  return enviosFiltrados;
+};
+
 module.exports = {
   findEnvioById,
   getEnviosByUserId,
@@ -123,4 +172,5 @@ module.exports = {
   deleteEnvio,
   createEnvio,
   updateEnvio,
+  filtrarEnvios,
 };
