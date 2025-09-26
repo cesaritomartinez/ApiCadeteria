@@ -43,16 +43,17 @@ const getAllEnvios = async (req, res) => {
 
     // Si es admin, mostrar todos los envíos (implementar lógica admin después)
     // Por ahora, solo los envíos del usuario
+
     if (req.userRole === "admin") {
-      envios = await enviosService.getAllEnviosAdmin();
+      envios = await enviosService.getAllEnviosAdmin(filtros);
     } else {
-      envios = await enviosService.getEnviosByUserId(req.userId);
+      envios = await enviosService.getEnviosByUserId(req.userId, req.query);
     }
 
-    enviosFiltrados = enviosService.filtrarEnvios(envios, filtros);
+    //enviosFiltrados = enviosService.filtrarEnvios(envios, filtros);
     console.log("Envios filtrados", enviosFiltrados);
 
-    res.status(StatusCodes.OK).json(enviosFiltrados);
+    res.status(StatusCodes.OK).json(envios);
   } catch (error) {
     res
       .status(error.code || StatusCodes.INTERNAL_SERVER_ERROR)
@@ -64,9 +65,10 @@ const getAllEnvios = async (req, res) => {
 
 const getEnvioById = async (req, res) => {
   const envioId = req.params.id;
+  const { userId, userRole } = req;
 
   try {
-    const envio = await enviosService.findEnvioById(envioId, req.userId);
+    const envio = await enviosService.findEnvioById(envioId, userId, userRole);
     res.status(StatusCodes.OK).json(envio);
   } catch (error) {
     res
@@ -79,9 +81,10 @@ const getEnvioById = async (req, res) => {
 
 const deleteEnvio = async (req, res) => {
   const envioId = req.params.id;
+  const { userId, userRole } = req;
 
   try {
-    await enviosService.deleteEnvio(envioId, req.userId);
+    await enviosService.deleteEnvio(envioId, userId, userRole);
     res.status(StatusCodes.NO_CONTENT).send();
   } catch (error) {
     res
@@ -106,10 +109,12 @@ const updateEnvio = async (req, res) => {
   }
 
   try {
+    const { userId, userRole } = req;
     const updatedEnvio = await enviosService.updateEnvio(
       envioId,
       body,
-      req.userId
+      userId,
+      userRole
     );
     res.status(StatusCodes.OK).json(updatedEnvio);
   } catch (error) {

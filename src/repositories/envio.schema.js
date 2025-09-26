@@ -29,11 +29,19 @@ const envioSchema = new mongoose.Schema(
     origen: { type: direccionSchema, required: true },
     destino: { type: direccionSchema, required: true },
     fechaRetiro: {
-      type: Date,
-      required: true,
-      validate: {
-        validator: (value) => value >= new Date().setHours(0, 0, 0, 0),
-        message: "La fecha de retiro debe ser hoy o una fecha futura",
+  type: Date,
+  required: true,
+  validate: {
+    validator: function (value) {
+      // si NO cambiaste la fecha en este update, no revalides
+      if (!this.isModified('fechaRetiro')) return true;
+
+      // comparar contra HOY en UTC (medianoche)
+      const todayUTC = new Date();
+      todayUTC.setUTCHours(0, 0, 0, 0);
+      return value >= todayUTC;
+    },
+    message: "La fecha de retiro debe ser hoy o una fecha futura",
       },
     },
     horaRetiroAprox: {

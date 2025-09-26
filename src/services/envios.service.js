@@ -2,56 +2,126 @@ const { StatusCodes } = require("http-status-codes");
 const buildEnvioDTOResponse = require("../dtos/envio.response.dto");
 const Envio = require("../models/envio.model");
 
-const findEnvioById = async (envioId, userId) => {
+const findEnvioById = async (envioId, userId, userRole = "user") => {
   try {
-    const envio = await findEnvioByIdInDB(envioId, userId);
+    const envio = await findEnvioByIdInDB(envioId, userId, userRole);
     return buildEnvioDTOResponse(envio);
   } catch (error) {
     throw error;
   }
 };
 
-const getAllEnviosAdmin = async () => {
+const getAllEnviosAdmin = async (queryParams = {}) => {
   try {
-    const allEnviosDB = await Envio.find();
-    let enviosResponse = allEnviosDB.map((envio) => {
-      return buildEnvioDTOResponse(envio);
-    });
+    const query = {};
 
-    return enviosResponse;
+    // Filtros simples
+    if (queryParams.estado) {
+      query.estado = queryParams.estado;
+    }
+    if (queryParams.tamanoPaquete) {
+      // 'chico' | 'mediano' | 'grande'
+      query.tamanoPaquete = String(queryParams.tamanoPaquete).trim().toLowerCase();
+    }
+
+    // Fechas
+    if (queryParams.fecha) {
+      // Día puntual (guardás como YYYY-MM-DDT00:00:00.000Z, por eso alcanza con igualdad)
+      query.fechaRetiro = new Date(queryParams.fecha); // 'YYYY-MM-DD'
+    } else {
+      const start = queryParams.fechaDesde || queryParams.startDate;
+      const end   = queryParams.fechaHasta || queryParams.endDate;
+
+      if (start || end) {
+        query.fechaRetiro = {};
+        if (start) query.fechaRetiro.$gte = new Date(start);
+        if (end)   query.fechaRetiro.$lte = new Date(end);
+      }
+    }
+
+    const allEnviosDB = await Envio
+      .find(query)
+      .sort({ fechaRetiro: 1, createdAt: -1 });
+
+    return allEnviosDB.map(buildEnvioDTOResponse);
   } catch (e) {
-    console.log("Error obteniendo todos los envios", e);
-    let error = new Error("error getting all envios");
+    console.log("Error obteniendo todos los envios (admin)", e);
+    const error = new Error("error getting all envios");
     error.status = "internal_server_error";
     error.code = StatusCodes.INTERNAL_SERVER_ERROR;
     throw error;
   }
 };
 
-const getEnviosByUserId = async (userId) => {
+
+// const getEnviosByUserId = async (userId, queryParams) => {
+//   try {
+//     console.log("🔍 Buscando envíos para userId:", userId);
+//     const userEnviosDB = await Envio.find({ user: userId });
+//     console.log("📦 Envíos encontrados en DB:", userEnviosDB.length);
+
+//     let enviosResponse = userEnviosDB.map((envio) => {
+//       return buildEnvioDTOResponse(envio);
+//     });
+
+//     console.log("✅ Envíos después del DTO:", enviosResponse.length);
+//     return enviosResponse;
+//   } catch (e) {
+//     console.log("Error obteniendo envios del usuario", e);
+//     let error = new Error("error getting envios for user");
+//     error.status = "internal_server_error";
+//     error.code = StatusCodes.INTERNAL_SERVER_ERROR;
+//     throw error;
+//   }
+// };
+
+const getEnviosByUserId = async (userId, queryParams = {}) => {
   try {
-    console.log("🔍 Buscando envíos para userId:", userId);
-    const userEnviosDB = await Envio.find({ user: userId });
-    console.log("📦 Envíos encontrados en DB:", userEnviosDB.length);
+    let query = { user: userId };
 
-    let enviosResponse = userEnviosDB.map((envio) => {
-      return buildEnvioDTOResponse(envio);
-    });
+    // filtros simples
+    if (queryParams.estado) {
+      query.estado = queryParams.estado;
+    }
+    if (queryParams.tamanoPaquete) {
+      query.tamanoPaquete = queryParams.tamanoPaquete; // 'chico' | 'mediano' | 'grande'
+    }
 
-    console.log("✅ Envíos después del DTO:", enviosResponse.length);
+    // ---- FECHAS ----
+    // 1) fecha puntual (esperado: 'YYYY-MM-DD'; en DB guardás 'YYYY-MM-DDT00:00:00.000Z')
+    if (queryParams.fecha) {
+      query.fechaRetiro = new Date(queryParams.fecha);
+    } else {
+      // 2) rango: fechaDesde/fechaHasta (compat con startDate/endDate)
+      const start = queryParams.fechaDesde || queryParams.startDate;
+      const end   = queryParams.fechaHasta || queryParams.endDate;
+
+      if (start || end) {
+        query.fechaRetiro = {};
+        if (start) query.fechaRetiro.$gte = new Date(start);
+        if (end)   query.fechaRetiro.$lte = new Date(end);
+      }
+    }
+
+    const userEnviosDB = await Envio
+      .find(query)
+      .sort({ fechaRetiro: 1, createdAt: -1 });
+
+    const enviosResponse = userEnviosDB.map(e => buildEnvioDTOResponse(e));
     return enviosResponse;
+
   } catch (e) {
     console.log("Error obteniendo envios del usuario", e);
-    let error = new Error("error getting envios for user");
+    const error = new Error("error getting envios for user");
     error.status = "internal_server_error";
     error.code = StatusCodes.INTERNAL_SERVER_ERROR;
     throw error;
   }
 };
 
-const deleteEnvio = async (envioId, userId) => {
+const deleteEnvio = async (envioId, userId, userRole = "user") => {
   try {
-    const envio = await findEnvioByIdInDB(envioId, userId);
+    const envio = await findEnvioByIdInDB(envioId, userId, userRole);
     await envio.deleteOne();
   } catch (error) {
     throw error;
@@ -82,9 +152,9 @@ const createEnvio = async (envioData, userId) => {
   }
 };
 
-const updateEnvio = async (envioId, updateData, userId) => {
+const updateEnvio = async (envioId, updateData, userId, userRole = "user") => {
   try {
-    const envio = await findEnvioByIdInDB(envioId, userId);
+    const envio = await findEnvioByIdInDB(envioId, userId, userRole);
 
     Object.assign(envio, updateData);
     const updatedEnvio = await envio.save();
@@ -94,7 +164,7 @@ const updateEnvio = async (envioId, updateData, userId) => {
   }
 };
 
-const findEnvioByIdInDB = async (envioId, userId) => {
+const findEnvioByIdInDB = async (envioId, userId, userRole = "user") => {
   let envio;
   try {
     envio = await Envio.findById(envioId);
@@ -112,7 +182,7 @@ const findEnvioByIdInDB = async (envioId, userId) => {
     throw error;
   }
 
-  if (envio.user.toString() !== userId) {
+  if (userRole !== "admin" && envio.user.toString() !== userId) {
     let error = new Error("not allowed to access this resource");
     (error.status = "forbidden"), (error.code = StatusCodes.FORBIDDEN);
     throw error;

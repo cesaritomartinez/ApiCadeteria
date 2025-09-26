@@ -41,7 +41,7 @@ const doLogin = async ({ username, password }) => {
   //   userId: user,
   //   role: user.role,
   // };
-  return { token: token, user: user };
+  return { token: token, user: buildUserDTOResponse(user) };
 };
 
 const registerUser = async ({

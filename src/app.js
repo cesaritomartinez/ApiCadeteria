@@ -12,6 +12,7 @@ const connectMongoDB = require("./repositories/mongo.client");
 
 app.use(express.json());
 
+
 // Rutas públicas
 app.use("/public/v1", signupRouter);
 app.use("/public/v1", loginRouter);
