@@ -2,7 +2,7 @@ const { StatusCodes } = require("http-status-codes");
 const buildEnvioDTOResponse = require("../dtos/envio.response.dto");
 const Envio = require("../models/envio.model");
 
-const findEnvioById = async (envioId, userId, userRole = "user") => {
+const findEnvioById = async (envioId, userId, userRole = "cliente") => {
   try {
     const envio = await findEnvioByIdInDB(envioId, userId, userRole);
     return buildEnvioDTOResponse(envio);
@@ -25,9 +25,9 @@ const getAllEnviosAdmin = async (queryParams = {}) => {
     }
 
     // Fechas
-    if (queryParams.fecha) {
-      
+    if (queryParams.fecha) {      
       query.fechaRetiro = new Date(queryParams.fecha); // 'YYYY-MM-DD'
+
     } else if (queryParams.fechaDesde || queryParams.startDate ||
       queryParams.fechaHasta || queryParams.endDate){
 

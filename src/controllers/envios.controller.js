@@ -42,13 +42,13 @@ const registerEnvio = async (req, res) => {
 
       if (plan === 'plus') {
       const pendientes = await enviosService.countPendientesByUser(req.userId);
-      // si ya tiene 5 pendientes, NO crear (el nuevo no cuenta porque todavía no existe)
-      if (pendientes >= 5) {
+      // si ya tiene 10 pendientes, NO crear (el nuevo no cuenta porque todavía no existe)
+      if (pendientes >= process.env.MAX_PLAN_PLUS) {
         return res
           .status(StatusCodes.FORBIDDEN)
           .json(createError(
             "forbidden",
-            "Límite alcanzado: máximo 5 envíos pendientes para el plan PLUS"
+            `Límite alcanzado: máximo ${process.env.MAX_PLAN_PLUS} envíos pendientes para el plan PLUS`
           ));
       }
     }
