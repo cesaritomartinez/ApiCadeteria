@@ -119,10 +119,27 @@ const getEnviosByUserId = async (userId, queryParams = {}) => {
   }
 };
 
-const deleteEnvio = async (envioId, userId, userRole = "user") => {
+const deleteEnvio = async (envioId, userId, userRole = "cliente") => {
   try {
     const envio = await findEnvioByIdInDB(envioId, userId, userRole);
+
+    if (userRole === "cliente") {
+      // Bloqueo si hoy es el mismo día del retiro (o después)
+      const todayUTC = new Date(); todayUTC.setUTCHours(0, 0, 0, 0);
+      const fechaRetiroUTC = new Date(envio.fechaRetiro); fechaRetiroUTC.setUTCHours(0, 0, 0, 0);
+
+      if (todayUTC >= fechaRetiroUTC) {
+        const error = new Error("No se puede cancelar el envío el mismo día del retiro (ni después)");
+        error.status = "bad_request";
+        error.code = StatusCodes.BAD_REQUEST;
+        throw error;
+      }
+    }
+
+
     await envio.deleteOne();
+
+
   } catch (error) {
     throw error;
   }
