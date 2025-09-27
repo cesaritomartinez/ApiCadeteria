@@ -152,19 +152,44 @@ const createEnvio = async (envioData, userId) => {
   }
 };
 
-const updateEnvio = async (envioId, updateData, userId, userRole = "user") => {
+const updateEnvio = async (envioId, updateData, userId, userRole = "cliente") => {
   try {
     const envio = await findEnvioByIdInDB(envioId, userId, userRole);
 
+    if (userRole === "cliente") {
+      // 1) El cliente NO puede cambiar el estado
+      if ('estado' in updateData) {
+        const error = new Error("Los clientes no pueden cambiar el estado del envío");
+        error.status = "forbidden";
+        error.code = StatusCodes.FORBIDDEN;
+        throw error;
+      }
+
+    }
+
+    // 2) El cliente solo puede cambiar fecha si es al menos 1 día antes
+      if ('fechaRetiro' in updateData) {
+        const todayUTC = new Date(); todayUTC.setUTCHours(0,0,0,0);
+        const fechaActualUTC = new Date(envio.fechaRetiro); fechaActualUTC.setUTCHours(0,0,0,0);
+
+        if (todayUTC >= fechaActualUTC) {
+          const err = new Error("No se puede reprogramar la fecha el mismo día del retiro (ni después)");
+          err.status = "bad_request";
+          err.code = StatusCodes.BAD_REQUEST;
+          throw err;
+        }
+      }
     Object.assign(envio, updateData);
     const updatedEnvio = await envio.save();
     return buildEnvioDTOResponse(updatedEnvio);
+
   } catch (error) {
     throw error;
   }
-};
+}
 
-const findEnvioByIdInDB = async (envioId, userId, userRole = "user") => {
+
+const findEnvioByIdInDB = async (envioId, userId, userRole = "cliente") => {
   let envio;
   try {
     envio = await Envio.findById(envioId);
