@@ -249,24 +249,36 @@ const findEnvioByIdInDB = async (envioId, userId, userRole = "cliente") => {
   try {
     envio = await Envio.findById(envioId);
   } catch (e) {
-    console.log("Error obteniendo el envio en la base", e);
-    let error = new Error("error getting envio in database");
-    (error.status = "internal_server_error"),
-      (error.code = StatusCodes.INTERNAL_SERVER_ERROR);
-    throw error;
+    // ID con formato inválido -> CastError => 400
+    if (e.name === "CastError") {
+      const err = new Error("invalid envio id");
+      err.status = "bad_request";
+      err.code = StatusCodes.BAD_REQUEST;
+      throw err;
+    }
+    // Otros problemas de DB -> 500
+    const err = new Error("error getting envio in database");
+    err.status = "internal_server_error";
+    err.code = StatusCodes.INTERNAL_SERVER_ERROR;
+    throw err;
   }
 
+  // ID válido pero no existe -> 404
   if (!envio) {
-    let error = new Error("envio was not found in database");
-    (error.status = "not_found"), (error.code = StatusCodes.NOT_FOUND);
-    throw error;
+    const err = new Error("envio was not found in database");
+    err.status = "not_found";
+    err.code = StatusCodes.NOT_FOUND;
+    throw err;
   }
 
-  if (userRole !== "admin" && envio.user.toString() !== userId) {
-    let error = new Error("not allowed to access this resource");
-    (error.status = "forbidden"), (error.code = StatusCodes.FORBIDDEN);
-    throw error;
+  // Autorización -> 403 (salvo admin)
+  if (userRole !== "admin" && String(envio.user) !== String(userId)) {
+    const err = new Error("not allowed to access this resource");
+    err.status = "forbidden";
+    err.code = StatusCodes.FORBIDDEN;
+    throw err;
   }
+
   return envio;
 };
 
