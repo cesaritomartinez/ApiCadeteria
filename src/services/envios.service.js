@@ -26,18 +26,39 @@ const getAllEnviosAdmin = async (queryParams = {}) => {
 
     // Fechas
     if (queryParams.fecha) {
-      // Día puntual (guardás como YYYY-MM-DDT00:00:00.000Z, por eso alcanza con igualdad)
+      
       query.fechaRetiro = new Date(queryParams.fecha); // 'YYYY-MM-DD'
-    } else {
+    } else if (queryParams.fechaDesde || queryParams.startDate ||
+      queryParams.fechaHasta || queryParams.endDate){
+
       const start = queryParams.fechaDesde || queryParams.startDate;
       const end   = queryParams.fechaHasta || queryParams.endDate;
 
-      if (start || end) {
-        query.fechaRetiro = {};
-        if (start) query.fechaRetiro.$gte = new Date(start);
-        if (end)   query.fechaRetiro.$lte = new Date(end);
+      
+      query.fechaRetiro = {};
+      if (start) query.fechaRetiro.$gte = new Date(start);
+      if (end)   query.fechaRetiro.$lte = new Date(end);
+      
+    } else{
+       const ultimos = String(queryParams.ultimos || queryParams.periodo || '').toLowerCase();
+
+      if (ultimos === 'semana') {
+        const hoy = new Date(); hoy.setUTCHours(0,0,0,0);
+        const hace7 = new Date(hoy); hace7.setUTCDate(hoy.getUTCDate() - 7);
+        const finHoy = new Date(hoy); finHoy.setUTCHours(23,59,59,999);
+        query.fechaRetiro = { $gte: hace7, $lte: finHoy };
+      } else if (ultimos === 'mes') {
+        const hoy = new Date(); hoy.setUTCHours(0,0,0,0);
+        const hace30 = new Date(hoy); hace30.setUTCDate(hoy.getUTCDate() - 30);
+        const finHoy = new Date(hoy); finHoy.setUTCHours(23,59,59,999);
+        query.fechaRetiro = { $gte: hace30, $lte: finHoy };
       }
+
+      
+
     }
+
+
 
     const allEnviosDB = await Envio
       .find(query)
@@ -88,18 +109,35 @@ const getEnviosByUserId = async (userId, queryParams = {}) => {
     }
 
     // ---- FECHAS ----
-    // 1) fecha puntual (esperado: 'YYYY-MM-DD'; en DB guardás 'YYYY-MM-DDT00:00:00.000Z')
+    // 1) fecha puntual (esperado: 'YYYY-MM-DD')
     if (queryParams.fecha) {
       query.fechaRetiro = new Date(queryParams.fecha);
-    } else {
+    } else if (
+      queryParams.fechaDesde || queryParams.startDate ||
+      queryParams.fechaHasta || queryParams.endDate
+    ){
       // 2) rango: fechaDesde/fechaHasta (compat con startDate/endDate)
       const start = queryParams.fechaDesde || queryParams.startDate;
       const end   = queryParams.fechaHasta || queryParams.endDate;
 
-      if (start || end) {
+      
         query.fechaRetiro = {};
         if (start) query.fechaRetiro.$gte = new Date(start);
         if (end)   query.fechaRetiro.$lte = new Date(end);
+      
+    }else{
+      const ultimos = String(queryParams.ultimos || queryParams.periodo || '').toLowerCase();
+
+      if (ultimos === 'semana') {
+        const hoy = new Date(); hoy.setUTCHours(0,0,0,0);
+        const hace7 = new Date(hoy); hace7.setUTCDate(hoy.getUTCDate() - 7);
+        const finHoy = new Date(hoy); finHoy.setUTCHours(23,59,59,999);
+        query.fechaRetiro = { $gte: hace7, $lte: finHoy };
+      } else if (ultimos === 'mes') {
+        const hoy = new Date(); hoy.setUTCHours(0,0,0,0);
+        const hace30 = new Date(hoy); hace30.setUTCDate(hoy.getUTCDate() - 30);
+        const finHoy = new Date(hoy); finHoy.setUTCHours(23,59,59,999);
+        query.fechaRetiro = { $gte: hace30, $lte: finHoy };
       }
     }
 
@@ -277,6 +315,12 @@ const filtrarEnvios = (envios, filtros) => {
   return enviosFiltrados;
 };
 
+//cuenta la cantidad de envios con estado pendiente de un usuario
+const countPendientesByUser = async (userId) => {
+  return Envio.countDocuments({ user: userId, estado: 'pendiente' });
+};
+
+
 module.exports = {
   findEnvioById,
   getEnviosByUserId,
@@ -285,4 +329,5 @@ module.exports = {
   createEnvio,
   updateEnvio,
   filtrarEnvios,
+  countPendientesByUser
 };

@@ -80,8 +80,7 @@ const registerUser = async ({
   }
 };
 
-const getUserByUserName = async (username) =>
-  await User.findOne({ username: username });
+
 
 module.exports = {
   doLogin,

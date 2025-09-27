@@ -2,6 +2,9 @@ const createEnvioSchema = require("../validators/create.envio.schema");
 const { createError } = require("../utils/error");
 const { StatusCodes } = require("http-status-codes");
 const enviosService = require("../services/envios.service");
+const usersService = require("../services/users.service");
+const User = require("../models/user.model");
+
 
 const registerEnvio = async (req, res) => {
   const { body } = req;
@@ -24,6 +27,32 @@ const registerEnvio = async (req, res) => {
   }
 
   try {
+        // plan del usuario (default: plus)
+      const user = await User.findById(req.userId);
+      if (!user) {
+      return res
+        .status(StatusCodes.UNAUTHORIZED)
+        .json(createError("unauthorized", "Usuario no encontrado"));
+    }
+
+      let plan = 'plus';
+      if (user && user.plan) {
+        plan = String(user.plan).toLowerCase();
+      }
+
+      if (plan === 'plus') {
+      const pendientes = await enviosService.countPendientesByUser(req.userId);
+      // si ya tiene 5 pendientes, NO crear (el nuevo no cuenta porque todavía no existe)
+      if (pendientes >= 5) {
+        return res
+          .status(StatusCodes.FORBIDDEN)
+          .json(createError(
+            "forbidden",
+            "Límite alcanzado: máximo 5 envíos pendientes para el plan PLUS"
+          ));
+      }
+    }
+
     const newEnvio = await enviosService.createEnvio(body, req.userId);
     res.status(StatusCodes.CREATED).json(newEnvio);
   } catch (error) {
