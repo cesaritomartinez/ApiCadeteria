@@ -12,7 +12,8 @@
   "tags": [
     { "name": "Health", "description": "Consultar estado de la api" },
     { "name": "Auth", "description": "Registro y login" },
-    { "name": "Envios", "description": "Gestión de envíos (requiere JWT)" }
+    { "name": "Envios", "description": "Gestión de envíos (requiere JWT)" },
+    { "name": "Categories", "description": "Gestión de categorías (requiere JWT)" }
   ],
   "paths": {
     "/": {
@@ -189,10 +190,7 @@
                     "horaRetiroAprox": "14:30",
                     "tamanoPaquete": "mediano",
                     "notas": "Entregar en recepción, paquete frágil",
-                    "categoria": {
-                      "nombre": "Documentación",
-                      "descripcion": "Carpeta con papeles importantes"
-                    }
+                    "category": "Documentos"
                   }
                 }
               }
@@ -290,6 +288,42 @@
           "404": { "$ref": "#/components/responses/NotFound" }
         }
       }
+    },
+    "/v1/categories": {
+      "get": {
+        "tags": ["Categories"],
+        "summary": "Listar categorías",
+        "description": "Obtiene todas las categorías disponibles para clasificar envíos.",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Category" }
+                },
+                "examples": {
+                  "ok": {
+                    "value": [
+                      {
+                        "id": "507f1f77bcf86cd799439011",
+                        "name": "Documentos"
+                      },
+                      {
+                        "id": "507f1f77bcf86cd799439012",
+                        "name": "Electrónicos"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
     }
   },
   "components": {
@@ -314,13 +348,13 @@
         },
         "required": ["calle", "ciudad"]
       },
-      "Categoria": {
+      "Category": {
         "type": "object",
         "properties": {
-          "nombre": { "type": "string" },
-          "descripcion": { "type": "string" }
+          "id": { "type": "string", "description": "ObjectId de la categoría" },
+          "name": { "type": "string", "example": "Documentos" }
         },
-        "required": ["nombre"]
+        "required": ["id", "name"]
       },
       "Envio": {
         "type": "object",
@@ -339,7 +373,7 @@
             "enum": ["chico", "mediano", "grande"]
           },
           "notas": { "type": "string", "maxLength": 500 },
-          "categoria": { "$ref": "#/components/schemas/Categoria" },
+          "category": { "type": "string", "description": "ObjectId de la categoría", "nullable": true },
           "estado": {
             "type": "string",
             "enum": ["pendiente", "en_ruta", "entregado", "cancelado"],
@@ -379,9 +413,11 @@
             "enum": ["chico", "mediano", "grande"]
           },
           "notas": { "type": "string", "maxLength": 500, "nullable": true },
-          "categoria": {
-            "$ref": "#/components/schemas/Categoria",
-            "nullable": true
+          "category": {
+            "type": "string",
+            "description": "Nombre de la categoría (debe existir en la base de datos). Consulta GET /v1/categories para ver las categorías disponibles.",
+            "nullable": true,
+            "example": "Documentos"
           }
         },
         "required": ["origen", "destino", "fechaRetiro", "tamanoPaquete"]
@@ -401,7 +437,11 @@
             "enum": ["chico", "mediano", "grande"]
           },
           "notas": { "type": "string", "maxLength": 500 },
-          "categoria": { "$ref": "#/components/schemas/Categoria" },
+          "category": {
+            "type": "string",
+            "description": "ObjectId de la categoría",
+            "nullable": true
+          },
           "estado": {
             "type": "string",
             "enum": ["pendiente", "en_ruta", "entregado", "cancelado"]

@@ -10,14 +10,6 @@ const direccionSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const categoriaSchema = new mongoose.Schema(
-  {
-    nombre: { type: String, required: true, trim: true },
-    descripcion: { type: String, trim: true },
-  },
-  { _id: false }
-);
-
 const envioSchema = new mongoose.Schema(
   {
     user: {
@@ -55,7 +47,11 @@ const envioSchema = new mongoose.Schema(
       required: true,
     },
     notas: { type: String, trim: true, maxlength: 500 },
-    categoria: { type: categoriaSchema, default: undefined },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: false,
+    },
     estado: {
       type: String,
       enum: ["pendiente", "en_ruta", "entregado", "cancelado"],

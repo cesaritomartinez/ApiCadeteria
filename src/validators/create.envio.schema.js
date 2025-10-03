@@ -7,11 +7,6 @@ const direccionSchema = Joi.object({
   referencia: Joi.string().trim().allow(''),
 });
 
-const categoriaSchema = Joi.object({
-  nombre: Joi.string().trim().required(),
-  descripcion: Joi.string().trim().allow(''),
-});
-
 const createEnvioSchema = Joi.object({
   origen: direccionSchema.required(),
   destino: direccionSchema.required(),
@@ -23,7 +18,9 @@ const createEnvioSchema = Joi.object({
   }),
   tamanoPaquete: Joi.string().valid('chico', 'mediano', 'grande').required(),
   notas: Joi.string().trim().max(500).allow(''),
-  categoria: categoriaSchema.allow(null)
+  category: Joi.string().trim().allow(null, '').messages({
+    'string.base': 'La categoría debe ser un texto válido'
+  })
 });
 
 module.exports = createEnvioSchema;

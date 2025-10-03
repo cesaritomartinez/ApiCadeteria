@@ -1,6 +1,7 @@
 const { StatusCodes } = require("http-status-codes");
 const buildEnvioDTOResponse = require("../dtos/envio.response.dto");
 const Envio = require("../models/envio.model");
+const Category = require("../models/category.model");
 
 const findEnvioById = async (envioId, userId, userRole = "cliente") => {
   try {
@@ -198,6 +199,20 @@ const deleteEnvio = async (envioId, userId, userRole = "cliente") => {
 };
 
 const createEnvio = async (envioData, userId) => {
+  let categoryId = null;
+
+  // Validar y buscar la categoría por nombre si se proporciona
+  if (envioData.category) {
+    const category = await Category.findOne({ name: envioData.category });
+    if (!category) {
+      const error = new Error(`La categoría "${envioData.category}" no existe`);
+      error.status = "bad_request";
+      error.code = StatusCodes.BAD_REQUEST;
+      throw error;
+    }
+    categoryId = category._id;
+  }
+
   const newEnvio = new Envio({
     user: userId,
     origen: envioData.origen,
@@ -206,7 +221,7 @@ const createEnvio = async (envioData, userId) => {
     horaRetiroAprox: envioData.horaRetiroAprox,
     tamanoPaquete: envioData.tamanoPaquete,
     notas: envioData.notas,
-    categoria: envioData.categoria,
+    category: categoryId,
   });
 
   try {

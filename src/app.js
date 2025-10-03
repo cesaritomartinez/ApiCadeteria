@@ -1,8 +1,7 @@
 const express = require("express");
 const app = express();
 const { StatusCodes } = require("http-status-codes");
-const swaggerUi = require("swagger-ui-express");
-const swaggerDocument = require("./documentation/swagger.json");
+const setupSwagger = require("./documentation/swagger-setup");
 require("dotenv").config();
 
 const publicRouter = require("./routes/public.router");
@@ -15,7 +14,7 @@ const connectMongoDB = require("./repositories/mongo.client");
 app.use(express.json());
 
 // Swagger documentation
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+setupSwagger(app);
 
 // Rutas públicas
 app.use("/public/v1", signupRouter);

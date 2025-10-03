@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 
 const authMiddleware = (req, res, next) => {
   //headers
-  const token = req.headers["authorization"];
+  let token = req.headers["authorization"];
 
   if (!token) {
     res
@@ -12,6 +12,11 @@ const authMiddleware = (req, res, next) => {
       .json(createError("unauthorized", "Auth token was not provided"));
     console.log("No hay token");
     return;
+  }
+
+  // Si el token viene con el prefijo "Bearer ", lo removemos
+  if (token.startsWith("Bearer ")) {
+    token = token.substring(7);
   }
 
   try {
