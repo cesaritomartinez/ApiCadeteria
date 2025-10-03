@@ -20,6 +20,18 @@ app.use(publicRouter);
 // Rutas privadas + middleware de autenticación dentro
 app.use("/v1", privateRouter);
 
+
+
+
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./documentation/swagger.json'); 
+
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+// Endpoint para obtener el JSON crudo
+app.get('/docs/swagger.json', (_req, res) => res.json(swaggerDocument));
+
+
+
 // 404 Not Found
 app.use((req, res) => {
   res.status(StatusCodes.NOT_FOUND).json({
