@@ -6,7 +6,6 @@
     "description": "API de envíos con autenticación JWT. Incluye endpoints públicos (signup, login, ping) y privados (CRUD de envíos)."
   },
   "servers": [
-    { "url": "http://localhost:3006", "description": "Local" },
     {
       "url": "http://api-cadeteria-5izmtymox-cesars-projects-2539e6a6.vercel.app",
       "description": "Prod"
