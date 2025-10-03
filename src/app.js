@@ -7,7 +7,6 @@ const publicRouter = require("./routes/public.router");
 const privateRouter = require("./routes/private.router");
 const loginRouter = require("./routes/login.router");
 const signupRouter = require("./routes/signup.router");
-
 const connectMongoDB = require("./repositories/mongo.client");
 
 app.use(express.json());
@@ -70,3 +69,5 @@ app.use((err, req, res, next) => {
     process.exit(1);
   }
 })();
+
+module.exports = app;
