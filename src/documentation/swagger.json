@@ -6,6 +6,7 @@
     "description": "API de envíos con autenticación JWT. Incluye endpoints públicos (signup, login, ping) y privados (CRUD de envíos)."
   },
   "servers": [
+    { "url": "http://localhost:3006", "description": "Local" },
     {
       "url": "http://api-cadeteria-5izmtymox-cesars-projects-2539e6a6.vercel.app",
       "description": "Prod"
@@ -14,12 +15,9 @@
   "tags": [
     { "name": "Health", "description": "Consultar estado de la api" },
     { "name": "Auth", "description": "Registro y login" },
+    { "name": "Categories", "description": "Consulta de categorías (público)" },
     { "name": "Users", "description": "Gestión de usuarios (requiere JWT)" },
-    { "name": "Envios", "description": "Gestión de envíos (requiere JWT)" },
-    {
-      "name": "Categories",
-      "description": "Gestión de categorías (requiere JWT)"
-    }
+    { "name": "Envios", "description": "Gestión de envíos (requiere JWT)" }
   ],
   "paths": {
     "/": {
@@ -295,12 +293,11 @@
         }
       }
     },
-    "/v1/categories": {
+    "/public/v1/categories": {
       "get": {
         "tags": ["Categories"],
         "summary": "Listar categorías",
-        "description": "Obtiene todas las categorías disponibles para clasificar envíos.",
-        "security": [{ "jwtAuth": [] }],
+        "description": "Obtiene todas las categorías disponibles para clasificar envíos. Endpoint público, no requiere autenticación.",
         "responses": {
           "200": {
             "description": "OK",
@@ -326,8 +323,7 @@
                 }
               }
             }
-          },
-          "401": { "$ref": "#/components/responses/Unauthorized" }
+          }
         }
       }
     },
