@@ -23,12 +23,19 @@ app.use("/v1", privateRouter);
 
 
 
+// --- Swagger: montar explícito en /docs y /api/docs ---
 const swaggerUi = require('swagger-ui-express');
-const swaggerDocument = require('./documentation/swagger.json'); 
+const swaggerDocument = require('./documentation/swagger.json');
 
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-// Endpoint para obtener el JSON crudo
+// /docs
+app.use('/docs', swaggerUi.serve);
+app.get('/docs', swaggerUi.setup(swaggerDocument));
 app.get('/docs/swagger.json', (_req, res) => res.json(swaggerDocument));
+
+// /api/docs (útil en Vercel si el handler vive bajo /api)
+app.use('/api/docs', swaggerUi.serve);
+app.get('/api/docs', swaggerUi.setup(swaggerDocument));
+app.get('/api/docs/swagger.json', (_req, res) => res.json(swaggerDocument));
 
 
 
