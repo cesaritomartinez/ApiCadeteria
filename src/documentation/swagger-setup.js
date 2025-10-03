@@ -1,14 +1,19 @@
 const swaggerDocument = require("./swagger.json");
+const path = require("path");
 
 const setupSwagger = (app) => {
+  console.log("setupSwagger called - registering /docs and /swagger.json routes");
+
   // Servir el JSON de Swagger
   app.get("/swagger.json", (req, res) => {
+    console.log("GET /swagger.json");
     res.setHeader("Content-Type", "application/json");
     res.send(swaggerDocument);
   });
 
   // Servir Swagger UI con CDN (compatible con Vercel)
   app.get("/docs", (req, res) => {
+    console.log("GET /docs");
     const html = `
 <!DOCTYPE html>
 <html lang="en">

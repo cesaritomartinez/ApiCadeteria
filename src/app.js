@@ -41,25 +41,15 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Conexión a MongoDB y arranque del servidor (solo en desarrollo)
-if (require.main === module) {
-  (async () => {
-    try {
-      await connectMongoDB();
-      console.log("conexión mongoDB ok");
+// Conexión a MongoDB
+connectMongoDB().catch(console.error);
 
-      const port = process.env.PORT || 3006;
-      app.listen(port, () => {
-        console.log("App started and listening in port " + port);
-      });
-    } catch (error) {
-      console.log("Error conectando con mongoDB", error);
-      process.exit(1);
-    }
-  })();
-} else {
-  // En Vercel, conectar a MongoDB sin app.listen
-  connectMongoDB().catch(console.error);
+// Arranque del servidor (solo en desarrollo local, no en Vercel)
+if (process.env.NODE_ENV !== 'production') {
+  const port = process.env.PORT || 3006;
+  app.listen(port, () => {
+    console.log("App started and listening in port " + port);
+  });
 }
 
 // Exportar para Vercel (serverless)
