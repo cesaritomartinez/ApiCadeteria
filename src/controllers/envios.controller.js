@@ -1,4 +1,5 @@
 const createEnvioSchema = require("../validators/create.envio.schema");
+const updateEnvioSchema = require("../validators/update.envio.schema");
 const { createError } = require("../utils/error");
 const { StatusCodes } = require("http-status-codes");
 const enviosService = require("../services/envios.service");
@@ -128,12 +129,13 @@ const updateEnvio = async (req, res) => {
   const envioId = req.params.id;
   const { body } = req;
 
-  if (!body || Object.keys(body).length === 0) {
+  // Validar con Joi
+  const { error, value } = updateEnvioSchema.validate(body);
+  if (error) {
+    const errorMessage = error.details[0].message;
     res
       .status(StatusCodes.BAD_REQUEST)
-      .json(
-        createError("bad_request", "Must provide at least one field to update")
-      );
+      .json(createError("bad_request", errorMessage));
     return;
   }
 
@@ -141,7 +143,7 @@ const updateEnvio = async (req, res) => {
     const { userId, userRole } = req;
     const updatedEnvio = await enviosService.updateEnvio(
       envioId,
-      body,
+      value,
       userId,
       userRole
     );

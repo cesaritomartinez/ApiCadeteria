@@ -45,7 +45,7 @@ app.use((err, req, res, next) => {
     await connectMongoDB();
     console.log("conexión mongoDB ok");
 
-    const port = process.env.PORT;
+    const port = process.env.PORT || 3006;
     app.listen(port, () => {
       console.log("App started and listening in port " + port);
     });
@@ -54,3 +54,6 @@ app.use((err, req, res, next) => {
     process.exit(1);
   }
 })();
+
+// Exportar para Vercel (serverless)
+module.exports = app;

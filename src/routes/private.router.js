@@ -9,6 +9,7 @@ const {
   updateEnvio,
 } = require("../controllers/envios.controller");
 const categoryController = require("../controllers/category.controller");
+const usersController = require("../controllers/users.controller");
 
 // Aplicar middleware de autenticación a todas las rutas privadas
 router.use(authMiddleware);
@@ -27,5 +28,8 @@ router.delete("/envios/:id", deleteEnvio); // Eliminar envios
 
 // Categorías
 router.get("/categories", categoryController.getCategories);
+
+// Usuarios - Cambio de plan
+router.put("/users/plan", usersController.updatePlan);
 
 module.exports = router;

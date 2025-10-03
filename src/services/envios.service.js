@@ -273,6 +273,20 @@ const updateEnvio = async (
         throw err;
       }
     }
+
+    // 3) Validar que la categoría existe si se proporciona en la actualización
+    if ("category" in updateData && updateData.category) {
+      const category = await Category.findOne({ name: updateData.category });
+      if (!category) {
+        const error = new Error(`La categoría "${updateData.category}" no existe`);
+        error.status = "bad_request";
+        error.code = StatusCodes.BAD_REQUEST;
+        throw error;
+      }
+      // Reemplazar el nombre por el ID de la categoría
+      updateData.category = category._id;
+    }
+
     Object.assign(envio, updateData);
     const updatedEnvio = await envio.save();
     return buildEnvioDTOResponse(updatedEnvio);
