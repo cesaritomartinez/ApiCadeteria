@@ -1,16 +1,21 @@
 const express = require("express");
 const app = express();
 const { StatusCodes } = require("http-status-codes");
+const swaggerUi = require("swagger-ui-express");
+const swaggerDocument = require("./documentation/swagger.json");
 require("dotenv").config();
 
 const publicRouter = require("./routes/public.router");
 const privateRouter = require("./routes/private.router");
 const loginRouter = require("./routes/login.router");
 const signupRouter = require("./routes/signup.router");
+
 const connectMongoDB = require("./repositories/mongo.client");
 
 app.use(express.json());
 
+// Swagger documentation
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Rutas públicas
 app.use("/public/v1", signupRouter);
@@ -18,10 +23,6 @@ app.use("/public/v1", loginRouter);
 app.use(publicRouter);
 // Rutas privadas + middleware de autenticación dentro
 app.use("/v1", privateRouter);
-
-
-
-
 
 // 404 Not Found
 app.use((req, res) => {
@@ -54,5 +55,3 @@ app.use((err, req, res, next) => {
     process.exit(1);
   }
 })();
-
-module.exports = app;
