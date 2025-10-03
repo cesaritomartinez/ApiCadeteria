@@ -3,16 +3,20 @@
   "info": {
     "title": "API Cadetería",
     "version": "1.0.0",
-    "description": "API de envíos con autenticación JWT. Incluye endpoints públicos (signup, login, ping) y privados (CRUD de envíos)."
+    "description": "API de envíos con autenticación JWT. Incluye endpoints públicos (signup, login, categories, health) y privados (CRUD de envíos, cambio de plan)."
   },
   "servers": [
     {
-      "url": "http://api-cadeteria-5izmtymox-cesars-projects-2539e6a6.vercel.app",
-      "description": "Prod"
+      "url": "https://api-cadeteria-5izmtymox-cesars-projects-2539e6a6.vercel.app",
+      "description": "Vercel (Prod)"
+    },
+    {
+      "url": "http://localhost:3006",
+      "description": "Local"
     }
   ],
   "tags": [
-    { "name": "Health", "description": "Consultar estado de la api" },
+    { "name": "Health", "description": "Estado de la API" },
     { "name": "Auth", "description": "Registro y login" },
     { "name": "Categories", "description": "Consulta de categorías (público)" },
     { "name": "Users", "description": "Gestión de usuarios (requiere JWT)" },
@@ -30,12 +34,10 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Api Cadeteria it`s works"
-                    }
-                  }
+                  "properties": { "message": { "type": "string" } }
+                },
+                "examples": {
+                  "ok": { "value": { "message": "Api Cadeteria it`s works" } }
                 }
               }
             }
@@ -85,7 +87,7 @@
       "post": {
         "tags": ["Auth"],
         "summary": "Login",
-        "description": "Valida credenciales y devuelve JWT.\n**Nota:** Actualmente la respuesta del controlador es `{ token: { token: string, user: User } }`.",
+        "description": "Valida credenciales y devuelve JWT.\n**Nota:** Respuesta actual: `{ token: { token: string, user: User } }`.",
         "requestBody": {
           "required": true,
           "content": {
@@ -104,9 +106,7 @@
             "description": "Autenticado",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoginResponseWrapped"
-                },
+                "schema": { "$ref": "#/components/schemas/LoginResponseWrapped" },
                 "examples": {
                   "actual": {
                     "value": {
@@ -135,12 +135,37 @@
         }
       }
     },
+    "/public/v1/categories": {
+      "get": {
+        "tags": ["Categories"],
+        "summary": "Listar categorías (público)",
+        "description": "Endpoint público: no requiere autenticación.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Category" } },
+                "examples": {
+                  "ok": {
+                    "value": [
+                      { "id": "507f1f77bcf86cd799439011", "name": "Documentos" },
+                      { "id": "507f1f77bcf86cd799439012", "name": "Electrónicos" }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/envios": {
       "get": {
         "tags": ["Envios"],
         "summary": "Listar envíos",
         "description": "Si el rol es `admin` devuelve todos; si no, solo los del usuario autenticado. Acepta filtros por estado, tamaño y fechas.",
-        "security": [{ "jwtAuth": [] }],
+        "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "$ref": "#/components/parameters/EstadoQuery" },
           { "$ref": "#/components/parameters/TamanoQuery" },
@@ -156,10 +181,7 @@
             "description": "OK",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/Envio" }
-                }
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Envio" } }
               }
             }
           },
@@ -169,8 +191,8 @@
       "post": {
         "tags": ["Envios"],
         "summary": "Crear envío",
-        "description": "Crea un envío con estado inicial `pendiente`. Si el **plan** del usuario es `plus`, solo permite crear si tiene **menos de MAX_PLAN_PLUS** envíos pendientes.",
-        "security": [{ "jwtAuth": [] }],
+        "description": "Crea un envío con estado inicial `pendiente`. Si el plan del usuario es `plus`, solo permite crear si tiene menos de `MAX_PLAN_PLUS` envíos pendientes.",
+        "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -179,21 +201,13 @@
               "examples": {
                 "ok": {
                   "value": {
-                    "origen": {
-                      "calle": "Avenida",
-                      "numero": "1234",
-                      "ciudad": "Montevideo"
-                    },
-                    "destino": {
-                      "calle": "Argentina",
-                      "numero": "5678",
-                      "ciudad": "Buenos Aires"
-                    },
+                    "origen": { "calle": "Avenida", "numero": "1234", "ciudad": "Montevideo" },
+                    "destino": { "calle": "Argentina", "numero": "5678", "ciudad": "Buenos Aires" },
                     "fechaRetiro": "2025-10-27",
                     "horaRetiroAprox": "14:30",
                     "tamanoPaquete": "mediano",
                     "notas": "Entregar en recepción, paquete frágil",
-                    "category": "Documentos"
+                    "categoria": { "nombre": "Documentación", "descripcion": "Papeles importantes" }
                   }
                 }
               }
@@ -220,17 +234,10 @@
       "get": {
         "tags": ["Envios"],
         "summary": "Obtener envío por ID",
-        "security": [{ "jwtAuth": [] }],
+        "security": [{ "bearerAuth": [] }],
         "parameters": [{ "$ref": "#/components/parameters/EnvioIdPath" }],
         "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Envio" }
-              }
-            }
-          },
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Envio" } } } },
           "400": { "$ref": "#/components/responses/BadRequest" },
           "401": { "$ref": "#/components/responses/Unauthorized" },
           "403": { "$ref": "#/components/responses/Forbidden" },
@@ -241,7 +248,7 @@
         "tags": ["Envios"],
         "summary": "Actualizar envío",
         "description": "Clientes no pueden cambiar `estado`. Clientes solo pueden reprogramar `fechaRetiro` hasta 1 día antes (no el mismo día).",
-        "security": [{ "jwtAuth": [] }],
+        "security": [{ "bearerAuth": [] }],
         "parameters": [{ "$ref": "#/components/parameters/EnvioIdPath" }],
         "requestBody": {
           "required": true,
@@ -249,28 +256,14 @@
             "application/json": {
               "schema": { "$ref": "#/components/schemas/EnvioUpdate" },
               "examples": {
-                "reprogramarFechaYNotas": {
-                  "value": {
-                    "fechaRetiro": "2025-10-28",
-                    "notas": "Reprogramado por el cliente"
-                  }
-                },
-                "cambiarEstadoAdmin": {
-                  "value": { "estado": "en_ruta" }
-                }
+                "reprogramarFechaYNotas": { "value": { "fechaRetiro": "2025-10-28", "notas": "Reprogramado por el cliente" } },
+                "cambiarEstadoAdmin": { "value": { "estado": "en_ruta" } }
               }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "Actualizado",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Envio" }
-              }
-            }
-          },
+          "200": { "description": "Actualizado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Envio" } } } },
           "400": { "$ref": "#/components/responses/BadRequest" },
           "401": { "$ref": "#/components/responses/Unauthorized" },
           "403": { "$ref": "#/components/responses/Forbidden" },
@@ -281,7 +274,7 @@
         "tags": ["Envios"],
         "summary": "Eliminar envío",
         "description": "Clientes no pueden eliminar si `fechaRetiro` es hoy (o ya pasó).",
-        "security": [{ "jwtAuth": [] }],
+        "security": [{ "bearerAuth": [] }],
         "parameters": [{ "$ref": "#/components/parameters/EnvioIdPath" }],
         "responses": {
           "204": { "description": "Eliminado" },
@@ -292,46 +285,12 @@
         }
       }
     },
-    "/public/v1/categories": {
-      "get": {
-        "tags": ["Categories"],
-        "summary": "Listar categorías",
-        "description": "Obtiene todas las categorías disponibles para clasificar envíos. Endpoint público, no requiere autenticación.",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/Category" }
-                },
-                "examples": {
-                  "ok": {
-                    "value": [
-                      {
-                        "id": "507f1f77bcf86cd799439011",
-                        "name": "Documentos"
-                      },
-                      {
-                        "id": "507f1f77bcf86cd799439012",
-                        "name": "Electrónicos"
-                      }
-                    ]
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/v1/users/plan": {
       "put": {
         "tags": ["Users"],
         "summary": "Cambiar plan de usuario (Solo Admin)",
-        "description": "Permite a un administrador cambiar el plan de un usuario de 'plus' a 'premium'. Solo los usuarios con rol 'admin' pueden realizar esta acción.",
-        "security": [{ "jwtAuth": [] }],
+        "description": "Permite a un administrador cambiar el plan de un usuario de 'plus' a 'premium'.",
+        "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -339,11 +298,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "userId": {
-                    "type": "string",
-                    "description": "ObjectId del usuario al que se le cambiará el plan",
-                    "example": "507f1f77bcf86cd799439011"
-                  }
+                  "userId": { "type": "string", "description": "ObjectId del usuario", "example": "507f1f77bcf86cd799439011" }
                 },
                 "required": ["userId"]
               }
@@ -353,81 +308,20 @@
         "responses": {
           "200": {
             "description": "Plan actualizado exitosamente",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/User" },
-                "examples": {
-                  "success": {
-                    "value": {
-                      "id": "507f1f77bcf86cd799439011",
-                      "username": "usuario1",
-                      "email": "usuario1@example.com",
-                      "nombre": "César",
-                      "apellido": "Martínez",
-                      "role": "cliente",
-                      "plan": "premium",
-                      "fechaCreacion": "2025-09-26T15:37:01.517Z",
-                      "fechaActualizacion": "2025-10-03T18:20:00.000Z"
-                    }
-                  }
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } }
           },
           "400": {
-            "description": "Datos inválidos o usuario no tiene plan 'plus'",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
-                "examples": {
-                  "missingUserId": {
-                    "value": {
-                      "status": "bad_request",
-                      "message": "El ID del usuario es requerido"
-                    }
-                  },
-                  "notPlus": {
-                    "value": {
-                      "status": "bad_request",
-                      "message": "Solo los usuarios con plan 'plus' pueden actualizar a 'premium'"
-                    }
-                  }
-                }
-              }
-            }
+            "description": "Datos inválidos o usuario sin plan 'plus'",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
           },
           "401": { "$ref": "#/components/responses/Unauthorized" },
           "403": {
             "description": "No tiene permisos (solo admin)",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
-                "examples": {
-                  "notAdmin": {
-                    "value": {
-                      "status": "forbidden",
-                      "message": "Solo los administradores pueden cambiar planes de usuario"
-                    }
-                  }
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
           },
           "404": {
             "description": "Usuario no encontrado",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
-                "examples": {
-                  "notFound": {
-                    "value": {
-                      "status": "not_found",
-                      "message": "Usuario no encontrado"
-                    }
-                  }
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
           }
         }
       }
@@ -435,11 +329,11 @@
   },
   "components": {
     "securitySchemes": {
-      "jwtAuth": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "authorization",
-        "description": "JWT token para autenticación. Ejemplo: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Ingresa **solo** el token (Swagger agrega 'Bearer')."
       }
     },
     "schemas": {
@@ -447,14 +341,19 @@
         "type": "object",
         "properties": {
           "calle": { "type": "string" },
-          "numero": {
-            "type": "string",
-            "description": "Puede ser '1234' o vacío"
-          },
+          "numero": { "type": "string", "description": "Puede ser '1234' o vacío" },
           "ciudad": { "type": "string" },
           "referencia": { "type": "string" }
         },
         "required": ["calle", "ciudad"]
+      },
+      "Categoria": {
+        "type": "object",
+        "properties": {
+          "nombre": { "type": "string" },
+          "descripcion": { "type": "string" }
+        },
+        "required": ["nombre"]
       },
       "Category": {
         "type": "object",
@@ -472,65 +371,27 @@
           "origen": { "$ref": "#/components/schemas/Direccion" },
           "destino": { "$ref": "#/components/schemas/Direccion" },
           "fechaRetiro": { "type": "string", "format": "date-time" },
-          "horaRetiroAprox": {
-            "type": "string",
-            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
-          },
-          "tamanoPaquete": {
-            "type": "string",
-            "enum": ["chico", "mediano", "grande"]
-          },
+          "horaRetiroAprox": { "type": "string", "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$" },
+          "tamanoPaquete": { "type": "string", "enum": ["chico", "mediano", "grande"] },
           "notas": { "type": "string", "maxLength": 500 },
-          "category": {
-            "type": "string",
-            "description": "ObjectId de la categoría",
-            "nullable": true
-          },
-          "estado": {
-            "type": "string",
-            "enum": ["pendiente", "en_ruta", "entregado", "cancelado"],
-            "default": "pendiente"
-          },
+          "categoria": { "$ref": "#/components/schemas/Categoria" },
+          "estado": { "type": "string", "enum": ["pendiente", "en_ruta", "entregado", "cancelado"], "default": "pendiente" },
           "codigoSeguimiento": { "type": "string" },
           "fechaCreacion": { "type": "string", "format": "date-time" },
           "fechaActualizacion": { "type": "string", "format": "date-time" }
         },
-        "required": [
-          "id",
-          "user",
-          "origen",
-          "destino",
-          "fechaRetiro",
-          "tamanoPaquete",
-          "estado"
-        ]
+        "required": ["id", "user", "origen", "destino", "fechaRetiro", "tamanoPaquete", "estado"]
       },
       "EnvioCreate": {
         "type": "object",
         "properties": {
           "origen": { "$ref": "#/components/schemas/Direccion" },
           "destino": { "$ref": "#/components/schemas/Direccion" },
-          "fechaRetiro": {
-            "type": "string",
-            "format": "date",
-            "description": "Se acepta 'YYYY-MM-DD' (se guarda como date-time en DB)"
-          },
-          "horaRetiroAprox": {
-            "type": "string",
-            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
-            "nullable": true
-          },
-          "tamanoPaquete": {
-            "type": "string",
-            "enum": ["chico", "mediano", "grande"]
-          },
+          "fechaRetiro": { "type": "string", "format": "date", "description": "Formato 'YYYY-MM-DD'. Se guarda como date-time en DB." },
+          "horaRetiroAprox": { "type": "string", "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "nullable": true },
+          "tamanoPaquete": { "type": "string", "enum": ["chico", "mediano", "grande"] },
           "notas": { "type": "string", "maxLength": 500, "nullable": true },
-          "category": {
-            "type": "string",
-            "description": "Nombre de la categoría (debe existir en la base de datos). Consulta GET /v1/categories para ver las categorías disponibles.",
-            "nullable": true,
-            "example": "Documentos"
-          }
+          "categoria": { "$ref": "#/components/schemas/Categoria" }
         },
         "required": ["origen", "destino", "fechaRetiro", "tamanoPaquete"]
       },
@@ -540,24 +401,11 @@
           "origen": { "$ref": "#/components/schemas/Direccion" },
           "destino": { "$ref": "#/components/schemas/Direccion" },
           "fechaRetiro": { "type": "string", "format": "date" },
-          "horaRetiroAprox": {
-            "type": "string",
-            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
-          },
-          "tamanoPaquete": {
-            "type": "string",
-            "enum": ["chico", "mediano", "grande"]
-          },
+          "horaRetiroAprox": { "type": "string", "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$" },
+          "tamanoPaquete": { "type": "string", "enum": ["chico", "mediano", "grande"] },
           "notas": { "type": "string", "maxLength": 500 },
-          "category": {
-            "type": "string",
-            "description": "ObjectId de la categoría",
-            "nullable": true
-          },
-          "estado": {
-            "type": "string",
-            "enum": ["pendiente", "en_ruta", "entregado", "cancelado"]
-          }
+          "categoria": { "$ref": "#/components/schemas/Categoria" },
+          "estado": { "type": "string", "enum": ["pendiente", "en_ruta", "entregado", "cancelado"] }
         },
         "additionalProperties": false
       },
@@ -569,16 +417,8 @@
           "email": { "type": "string", "format": "email" },
           "nombre": { "type": "string" },
           "apellido": { "type": "string" },
-          "role": {
-            "type": "string",
-            "enum": ["admin", "cliente"],
-            "default": "cliente"
-          },
-          "plan": {
-            "type": "string",
-            "enum": ["plus", "premium"],
-            "default": "plus"
-          },
+          "role": { "type": "string", "enum": ["admin", "cliente"], "default": "cliente" },
+          "plan": { "type": "string", "enum": ["plus", "premium"], "default": "plus" },
           "fechaCreacion": { "type": "string", "format": "date-time" },
           "fechaActualizacion": { "type": "string", "format": "date-time" }
         }
@@ -634,10 +474,7 @@
       "EstadoQuery": {
         "name": "estado",
         "in": "query",
-        "schema": {
-          "type": "string",
-          "enum": ["pendiente", "en_ruta", "entregado", "cancelado"]
-        },
+        "schema": { "type": "string", "enum": ["pendiente", "en_ruta", "entregado", "cancelado"] },
         "description": "Filtra por estado"
       },
       "TamanoQuery": {
@@ -686,51 +523,27 @@
     "responses": {
       "BadRequest": {
         "description": "Solicitud inválida",
-        "content": {
-          "application/json": {
-            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-          }
-        }
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
       },
       "Unauthorized": {
         "description": "No autorizado",
-        "content": {
-          "application/json": {
-            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-          }
-        }
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
       },
       "Forbidden": {
         "description": "Prohibido",
-        "content": {
-          "application/json": {
-            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-          }
-        }
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
       },
       "NotFound": {
         "description": "No encontrado",
-        "content": {
-          "application/json": {
-            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-          }
-        }
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
       },
       "Conflict": {
         "description": "Conflicto (duplicado)",
-        "content": {
-          "application/json": {
-            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-          }
-        }
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
       },
       "ServerError": {
         "description": "Error interno",
-        "content": {
-          "application/json": {
-            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-          }
-        }
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
       }
     }
   }
