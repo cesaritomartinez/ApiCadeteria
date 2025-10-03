@@ -13,17 +13,18 @@ const connectMongoDB = require("./repositories/mongo.client");
 
 app.use(express.json());
 
-// Swagger documentation
+// Swagger documentation (ANTES de todo para que funcione en Vercel)
 setupSwagger(app);
 
 // Rutas públicas
 app.use("/public/v1", signupRouter);
 app.use("/public/v1", loginRouter);
 app.use(publicRouter);
+
 // Rutas privadas + middleware de autenticación dentro
 app.use("/v1", privateRouter);
 
-// 404 Not Found
+// 404 Not Found (SIEMPRE al final)
 app.use((req, res) => {
   res.status(StatusCodes.NOT_FOUND).json({
     error: "Ruta no encontrada",
@@ -40,20 +41,26 @@ app.use((err, req, res, next) => {
   });
 });
 
-(async () => {
-  try {
-    await connectMongoDB();
-    console.log("conexión mongoDB ok");
+// Conexión a MongoDB y arranque del servidor (solo en desarrollo)
+if (require.main === module) {
+  (async () => {
+    try {
+      await connectMongoDB();
+      console.log("conexión mongoDB ok");
 
-    const port = process.env.PORT || 3006;
-    app.listen(port, () => {
-      console.log("App started and listening in port " + port);
-    });
-  } catch (error) {
-    console.log("Error conectando con mongoDB", error);
-    process.exit(1);
-  }
-})();
+      const port = process.env.PORT || 3006;
+      app.listen(port, () => {
+        console.log("App started and listening in port " + port);
+      });
+    } catch (error) {
+      console.log("Error conectando con mongoDB", error);
+      process.exit(1);
+    }
+  })();
+} else {
+  // En Vercel, conectar a MongoDB sin app.listen
+  connectMongoDB().catch(console.error);
+}
 
 // Exportar para Vercel (serverless)
 module.exports = app;
