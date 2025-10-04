@@ -201,21 +201,46 @@ const deleteEnvio = async (envioId, userId, userRole = "cliente") => {
 const createEnvio = async (envioData, userId) => {
   let categoryId = null;
 
-   //si mandan category como objeto { nombre }, tomar el nombre
+   // Si viene category como objeto { nombre }, convertir a string (por si algún flujo llama directo)
   if (envioData.category && typeof envioData.category === 'object') {
     envioData.category = String(envioData.category.nombre || '').trim();
   }
 
-  // Validar y buscar la categoría por nombre si se proporciona
-  if (envioData.category) {
-    const category = await Category.findOne({ name: envioData.category });
-    if (!category) {
+   // 1) Priorizar ID si viene
+  if (envioData.categoryId) {
+    const catById = await Category.findById(envioData.categoryId);
+    if (!catById) {
+      const error = new Error(`La categoría con id "${envioData.categoryId}" no existe`);
+      error.status = "bad_request";
+      error.code = StatusCodes.BAD_REQUEST;
+      throw error;
+    }
+    categoryId = catById._id;
+  }
+
+
+  // 2) Si vino nombre, validar contra las existentes (case/acentos–insensible)
+  else if (envioData.category) {
+    const nameRaw = String(envioData.category).trim();
+
+    let catByName = await Category
+      .findOne({ name: nameRaw })
+      .collation({ locale: 'es', strength: 1 });
+
+    if (!catByName) {
+      const escape = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      catByName = await Category.findOne({
+        name: { $regex: `^${escape(nameRaw)}$`, $options: 'i' }
+      });
+    }
+
+    if (!catByName) {
       const error = new Error(`La categoría "${envioData.category}" no existe`);
       error.status = "bad_request";
       error.code = StatusCodes.BAD_REQUEST;
       throw error;
     }
-    categoryId = category._id;
+    categoryId = catByName._id;
   }
 
   const newEnvio = new Envio({
@@ -231,6 +256,9 @@ const createEnvio = async (envioData, userId) => {
 
   try {
     const savedEnvio = await newEnvio.save();
+    //categoría para que el DTO tenga { id, nombre }
+    await savedEnvio.populate({ path: 'category', select: 'name' });
+    
     return buildEnvioDTOResponse(savedEnvio);
   } catch (e) {
     console.log("error guardando envio en la base", e);

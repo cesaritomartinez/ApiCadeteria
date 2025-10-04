@@ -26,7 +26,7 @@ const createEnvioSchema = Joi.object({
   tamanoPaquete: Joi.string().valid('chico', 'mediano', 'grande').required(),
   notas: Joi.string().trim().max(500).allow(''),
 
-  // ✅ Acepta string o { nombre, descripcion? } — opcional
+  // Acepta string o { nombre, descripcion? } — opcional
   category: Joi.alternatives()
     .try(
       Joi.string().trim().allow(null, ''),
@@ -37,10 +37,10 @@ const createEnvioSchema = Joi.object({
       'alternatives.types': 'La categoría debe ser texto o un objeto { nombre } válido'
     }),
 
-  // ✅ También opcional por ObjectId
+  //  También opcional por ObjectId
   categoryId: Joi.string().length(24).hex().optional()
 })
-// ✅ Evita que falle por claves extra como "categoria" si la normalización no corriera
+// Evita que falle por claves extra como "categoria" si la normalización no corriera
 .unknown(true);
 
 module.exports = createEnvioSchema;
