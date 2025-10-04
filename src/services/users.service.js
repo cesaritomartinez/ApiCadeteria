@@ -59,7 +59,7 @@ const registerUser = async ({
   }
 
   if (await getUserByEmail(email)) {
-    let error = new Error("user already exists");
+    let error = new Error("mail already exists");
     error.status = "conflict";
     error.code = StatusCodes.CONFLICT;
     throw error;
