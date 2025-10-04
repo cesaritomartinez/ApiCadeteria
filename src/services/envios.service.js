@@ -236,45 +236,35 @@ const createEnvio = async (envioData, userId) => {
   }
 };
 
-const updateEnvio = async (
-  envioId,
-  updateData,
-  userId,
-  userRole = "cliente"
-) => {
+const updateEnvio = async (envioId, updateData, userId, userRole = "cliente") => {
   try {
     const envio = await findEnvioByIdInDB(envioId, userId, userRole);
+    const isAdmin = userRole === "admin";
 
-    if (userRole === "cliente") {
+    // --- REGLAS SOLO PARA CLIENTE ---
+    if (!isAdmin) {
       // 1) El cliente NO puede cambiar el estado
       if ("estado" in updateData) {
-        const error = new Error(
-          "Los clientes no pueden cambiar el estado del envío"
-        );
+        const error = new Error("Los clientes no pueden cambiar el estado del envío");
         error.status = "forbidden";
         error.code = StatusCodes.FORBIDDEN;
         throw error;
       }
-    }
 
-    // 2) El cliente solo puede cambiar fecha si es al menos 1 día antes
-    if ("fechaRetiro" in updateData) {
-      const todayUTC = new Date();
-      todayUTC.setUTCHours(0, 0, 0, 0);
-      const fechaActualUTC = new Date(envio.fechaRetiro);
-      fechaActualUTC.setUTCHours(0, 0, 0, 0);
-
-      if (todayUTC >= fechaActualUTC) {
-        const err = new Error(
-          "No se puede reprogramar la fecha el mismo día del retiro (ni después)"
-        );
-        err.status = "bad_request";
-        err.code = StatusCodes.BAD_REQUEST;
-        throw err;
+      // 2) El cliente solo puede cambiar fecha si es al menos 1 día antes
+      if ("fechaRetiro" in updateData) {
+        const todayUTC = new Date();               todayUTC.setUTCHours(0, 0, 0, 0);
+        const fechaActualUTC = new Date(envio.fechaRetiro); fechaActualUTC.setUTCHours(0, 0, 0, 0);
+        if (todayUTC >= fechaActualUTC) {
+          const err = new Error("No se puede reprogramar la fecha el mismo día del retiro (ni después)");
+          err.status = "bad_request";
+          err.code = StatusCodes.BAD_REQUEST;
+          throw err;
+        }
       }
     }
 
-    // 3) Validar que la categoría existe si se proporciona en la actualización
+    // 3) Validar categoría si viene (para ambos roles)
     if ("category" in updateData && updateData.category) {
       const category = await Category.findOne({ name: updateData.category });
       if (!category) {
@@ -283,8 +273,7 @@ const updateEnvio = async (
         error.code = StatusCodes.BAD_REQUEST;
         throw error;
       }
-      // Reemplazar el nombre por el ID de la categoría
-      updateData.category = category._id;
+      updateData.category = category._id; // ojo: si tu modelo usa 'categoria', ajustá el nombre del campo
     }
 
     Object.assign(envio, updateData);
@@ -294,6 +283,7 @@ const updateEnvio = async (
     throw error;
   }
 };
+
 
 const findEnvioByIdInDB = async (envioId, userId, userRole = "cliente") => {
   let envio;
