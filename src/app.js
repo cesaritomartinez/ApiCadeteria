@@ -20,10 +20,11 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
 
 // Swagger documentation (ANTES de todo para que funcione en Vercel)
 setupSwagger(app);
+
+app.use(express.json());
 
 // Rutas públicas
 app.use("/public/v1", signupRouter);
