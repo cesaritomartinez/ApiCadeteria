@@ -201,6 +201,11 @@ const deleteEnvio = async (envioId, userId, userRole = "cliente") => {
 const createEnvio = async (envioData, userId) => {
   let categoryId = null;
 
+   //si mandan category como objeto { nombre }, tomar el nombre
+  if (envioData.category && typeof envioData.category === 'object') {
+    envioData.category = String(envioData.category.nombre || '').trim();
+  }
+
   // Validar y buscar la categoría por nombre si se proporciona
   if (envioData.category) {
     const category = await Category.findOne({ name: envioData.category });

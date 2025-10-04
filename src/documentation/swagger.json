@@ -207,7 +207,7 @@
                     "horaRetiroAprox": "14:30",
                     "tamanoPaquete": "mediano",
                     "notas": "Entregar en recepción, paquete frágil",
-                    "categoria": { "nombre": "Documentación", "descripcion": "Papeles importantes" }
+                    "category": { "nombre": "Documentación", "descripcion": "Papeles importantes" }
                   }
                 }
               }
