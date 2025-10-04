@@ -17,6 +17,21 @@ const registerEnvio = async (req, res) => {
     return;
   }
 
+  //  Normalizar alias y tipos ANTES de validar
+  if (body?.categoria && !body.category && !body.categoryId) {
+    const c = body.categoria;
+    body.category =
+      (typeof c === "object")
+        ? String(c.nombre || "").trim()
+        : String(c || "").trim();
+    delete body.categoria; // evita que Joi la rechace
+  }
+
+  // Si viene "category" como objeto { nombre, ... } -> convierte a string
+  if (body?.category && typeof body.category === "object") {
+    body.category = String(body.category.nombre || "").trim();
+  }
+
   const { error } = createEnvioSchema.validate(body);
 
   if (error) {
