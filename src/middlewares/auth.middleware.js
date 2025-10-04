@@ -1,5 +1,5 @@
 const { StatusCodes } = require("http-status-codes");
-const { createError } = require("../src/utils/error");
+const { createError } = require("../utils/error");
 const jwt = require("jsonwebtoken");
 
 const authMiddleware = (req, res, next) => {
