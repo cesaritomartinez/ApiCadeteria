@@ -12,6 +12,9 @@ const signupRouter = require("./routes/signup.router");
 
 const connectMongoDB = require("./repositories/mongo.client");
 
+// Swagger documentation (ANTES de todo para que funcione en Vercel)
+setupSwagger(app);
+
 // CORS
 app.use(cors());
 
@@ -24,8 +27,7 @@ app.use((req, res, next) => {
 });
 
 
-// Swagger documentation (ANTES de todo para que funcione en Vercel)
-setupSwagger(app);
+
 
 app.use(express.json());
 

@@ -1,37 +1,54 @@
 // src/documentation/swagger-setup.js
-const swaggerUi = require('swagger-ui-express');
 const baseDoc = require('./swagger.json');
 
 module.exports = (app) => {
   const buildDoc = (req) => {
     const proto = (req.headers['x-forwarded-proto'] || req.protocol).split(',')[0];
     const host = req.get('host');
-    const doc = JSON.parse(JSON.stringify(baseDoc)); // clonar
+    const doc = JSON.parse(JSON.stringify(baseDoc));
     doc.servers = [{ url: `${proto}://${host}`, description: 'Current host' }];
     return doc;
   };
 
-  const uiOpts = {
-    explorer: true,
-    customSiteTitle: 'API Cadetería',
-    swaggerOptions: { persistAuthorization: true },
-  };
-
-  // 1) Servir assets de Swagger UI bajo /docs
-  app.use('/docs', swaggerUi.serve);
-
-  // 2) Página de Swagger UI con SPEC embebido (SIN fetch)
-  //    También desactivamos caché para evitar que Vercel te muestre una versión vieja.
-  app.get('/docs', (req, res) => {
-    res.set('Cache-Control', 'no-store');
-    const spec = buildDoc(req);
-    const html = swaggerUi.generateHTML(spec, uiOpts);
-    res.send(html);
-  });
-
-  // 3) (opcional) JSON para debug rápido
+  // JSON para debug (lo mantenemos)
   app.get('/docs-json', (req, res) => {
     res.set('Cache-Control', 'no-store');
     res.json(buildDoc(req));
+  });
+
+  // UI de Swagger usando assets del CDN (¡sin servir nada local!)
+  app.get('/docs', (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    const spec = buildDoc(req);
+    const specString = JSON.stringify(spec); // embebemos el spec (sin fetch)
+    res.send(`<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>API Cadetería</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>body { margin: 0; }</style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script>
+    window.__SPEC__ = ${specString};
+  </script>
+  <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-standalone-preset.js"></script>
+  <script>
+    window.addEventListener('load', () => {
+      window.ui = SwaggerUIBundle({
+        spec: window.__SPEC__,                // 👈 usamos el spec embebido (sin fetch)
+        dom_id: '#swagger-ui',
+        presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+        layout: "BaseLayout",
+        persistAuthorization: true
+      });
+    });
+  </script>
+</body>
+</html>`);
   });
 };
