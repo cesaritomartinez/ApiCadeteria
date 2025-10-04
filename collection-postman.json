@@ -1,0 +1,490 @@
+{
+	"info": {
+		"_postman_id": "401ec75c-d287-46cc-a61a-2491c86f34d2",
+		"name": "O1-FS-Cadeteria",
+		"description": "``` markdown\n# ⏺ API Cadetería - Documentación Postman\n## ⚙️ Configuración Base\n- **Base URL:** [http://localhost:3006](http://localhost:3006)  \n- **Content-Type:** `application/json`\n---\n## 🔐 Autenticación\n### 1. Registro de Usuario\n**POST** `/signup`\n**Body (JSON):**\n```json\n{\n  \"username\": \"sanei1509\",\n  \"password\": \"123456\",\n  \"nombre\": \"Santiago\",\n  \"apellido\": \"Neira\",\n  \"email\": \"santiago@gmail.com\"\n}\n\n ```\n\n**Respuesta exitosa (201):**\n\n``` json\n{\n  \"id\": \"68d050bff1cdd9a5d56e23e0\",\n  \"username\": \"sanei1509\",\n  \"email\": \"santiago@gmail.com\",\n  \"nombre\": \"Santiago\",\n  \"apellido\": \"Neira\",\n  \"role\": \"cliente\",\n  \"plan\": \"plus\",\n  \"fechaCreacion\": \"2025-09-21T19:23:43.245Z\",\n  \"fechaActualizacion\": \"2025-09-21T19:23:43.245Z\"\n}\n\n ```\n\n---\n\n### 2\\. Login de Usuario\n\n**POST** `/login`\n\n**Body (JSON):**\n\n``` json\n{\n  \"username\": \"sanei1509\",\n  \"password\": \"123456\"\n}\n\n ```\n\n**Respuesta exitosa (200):**\n\n``` json\n{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6...\"\n}\n\n ```\n\n⚠️ **Importante:** Copiar el token para usarlo en las siguientes peticiones.\n\n---\n\n## 📦 Gestión de Envíos (Requiere Autenticación)\n\nPara todas las peticiones de envíos, agregar el header:  \n`Authorization: [tu_token_aquí]`\n\n---\n\n### 1\\. Crear Envío\n\n**POST** `/envios`\n\n**Headers:**\n\n```\nAuthorization: eyJhbGciOiJIUzI1NiIsInR5cCI6...\nContent-Type: application/json\n\n ```\n\n**Body (JSON):**\n\n``` json\n{\n  \"origen\": {\n    \"calle\": \"Av. Corrientes\",\n    \"numero\": \"1234\",\n    \"ciudad\": \"Buenos Aires\",\n    \"referencia\": \"Cerca del teatro San Martín\"\n  },\n  \"destino\": {\n    \"calle\": \"Av. Santa Fe\",\n    \"numero\": \"5678\",\n    \"ciudad\": \"Buenos Aires\",\n    \"referencia\": \"Frente al shopping\"\n  },\n  \"fechaRetiro\": \"2025-09-25\",\n  \"horaRetiroAprox\": \"14:30\",\n  \"tamanoPaquete\": \"mediano\",\n  \"notas\": \"Frágil - manejar con cuidado\",\n  \"categoria\": {\n    \"nombre\": \"Documentos\",\n    \"descripcion\": \"Papeles importantes\"\n  }\n}\n\n ```\n\n**Campos obligatorios:**\n\n- `origen.calle`, `origen.ciudad`\n    \n- `destino.calle`, `destino.ciudad`\n    \n- `fechaRetiro` (fecha hoy o futura)\n    \n- `tamanoPaquete` (valores: `\"chico\"`, `\"mediano\"`, `\"grande\"`)\n    \n\n**Campos opcionales:**\n\n- `origen.numero`, `origen.referencia`\n    \n- `destino.numero`, `destino.referencia`\n    \n- `horaRetiroAprox` (formato HH:mm)\n    \n- `notas` (máximo 500 caracteres)\n    \n- `categoria`\n    \n\n---\n\n### 2\\. Obtener Todos los Envíos del Usuario\n\n**GET** `/envios`\n\n**Headers:**\n\n```\nAuthorization: [tu_token_aquí]\n\n ```\n\n---\n\n### 3\\. Obtener Envío por ID\n\n**GET** `/envios/:id`\n\n**Headers:**\n\n```\nAuthorization: [tu_token_aquí]\n\n ```\n\n**Ejemplo:**\n\n```\nGET /envios/68d051234567890abcdef123\n\n ```\n\n---\n\n### 4\\. Actualizar Envío\n\n**PUT** `/envios/:id`\n\n**Headers:**\n\n```\nAuthorization: [tu_token_aquí]\nContent-Type: application/json\n\n ```\n\n**Body (JSON):**\n\n``` json\n{\n  \"estado\": \"en_ruta\",\n  \"notas\": \"Notas actualizadas\",\n  \"fechaRetiro\": \"2025-09-26\"\n}\n\n ```\n\n**Estados válidos:**\n\n- `\"pendiente\"`\n    \n- `\"en_ruta\"`\n    \n- `\"entregado\"`\n    \n- `\"cancelado\"`\n    \n\n---\n\n### 5\\. Eliminar Envío\n\n**DELETE** `/envios/:id`\n\n**Headers:**\n\n```\nAuthorization: [tu_token_aquí]\n\n ```\n\n**Ejemplo:**\n\n```\nDELETE /envios/68d051234567890abcdef123\n\n ```\n\n**Respuesta exitosa (204):** Sin contenido\n\n---\n\n## 🔧 Configuración en Postman\n\n### Variables de Entorno\n\n| Variable | Valor |\n| --- | --- |\n| base_url | [http://localhost:3006](http://localhost:3006) |\n| auth_token | {{token_from_login}} |\n\n### Automatización del Token\n\nEn la pestaña **Tests** del request de **Login**, agregar:\n\n``` javascript\nif (pm.response.code === 200) {\n  const response = pm.response.json();\n  pm.environment.set(\"auth_token\", response.token);\n}\n\n ```\n\nLuego, en los headers de las peticiones protegidas usar:  \n`Authorization: {{auth_token}}`\n\n---\n\n## ❌ Códigos de Error Comunes\n\n| Código | Descripción | Solución |\n| --- | --- | --- |\n| 400 | Bad Request - Datos inválidos | Verificar el formato del JSON y campos requeridos |\n| 401 | Unauthorized - Token inválido | Hacer login y usar el token correcto |\n| 403 | Forbidden - Sin permisos | El envío no pertenece al usuario |\n| 404 | Not Found - Recurso no encontrado | Verificar que el ID del envío existe |\n| 409 | Conflict - Usuario ya existe | Usar un username diferente |\n| 500 | Internal Server Error | Error del servidor |\n\n---\n\n## 📝 Flujo Típico de Uso\n\n1. Registrarse: **POST** `/signup`\n    \n2. Hacer login: **POST** `/login` → Guardar token\n    \n3. Crear envío: **POST** `/envios` (con token)\n    \n4. Ver envíos: **GET** `/envios` (con token)\n    \n5. Actualizar envío: **PUT** `/envios/:id` (con token)\n    \n6. Eliminar envío: **DELETE** `/envios/:id` (con token)\n    \n\n---\n\n## 🚀 Tips para Testing\n\n- Usa **fechas futuras** para `fechaRetiro`.\n    \n- El formato de hora debe ser **HH:mm** (ej: `\"14:30\"`).\n    \n- Los tamaños válidos son: `\"chico\"`, `\"mediano\"`, `\"grande\"`.\n    \n- El token **expira en 1 hora**, hacer login nuevamente si es necesario.\n    \n- Solo puedes ver/editar/eliminar **tus propios envíos**.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "41999843"
+	},
+	"item": [
+		{
+			"name": "Health",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://apicadeteria-mgrj1ujvk-cesars-projects-2539e6a6.vercel.app/",
+					"protocol": "https",
+					"host": [
+						"apicadeteria-mgrj1ujvk-cesars-projects-2539e6a6",
+						"vercel",
+						"app"
+					],
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Sign Up",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\" : \"cesaritoel345\",\n    \"nombre\": \"cesar\",\n    \"apellido\": \"martinez\",\n    \"email\": \"cesar2@gmail.com\",\n    \"password\" : \"1234\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://apicadeteria-mgrj1ujvk-cesars-projects-2539e6a6.vercel.app/public/v1/signup",
+					"protocol": "https",
+					"host": [
+						"apicadeteria-mgrj1ujvk-cesars-projects-2539e6a6",
+						"vercel",
+						"app"
+					],
+					"path": [
+						"public",
+						"v1",
+						"signup"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"  if (pm.response.code === 200) {",
+							"      pm.environment.set(\"auth_token\", pm.response.json().token.token);",
+							"      console.log(\"Token guardado\");",
+							"  }"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"sanei1509\",\n    \"password\": \"1234\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://apicadeteria-mgrj1ujvk-cesars-projects-2539e6a6.vercel.app/public/v1/loginReal",
+					"protocol": "https",
+					"host": [
+						"apicadeteria-mgrj1ujvk-cesars-projects-2539e6a6",
+						"vercel",
+						"app"
+					],
+					"path": [
+						"public",
+						"v1",
+						"loginReal"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Categories",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://apicadeteria-mgrj1ujvk-cesars-projects-2539e6a6.vercel.app/public/v1/categories",
+					"protocol": "https",
+					"host": [
+						"apicadeteria-mgrj1ujvk-cesars-projects-2539e6a6",
+						"vercel",
+						"app"
+					],
+					"path": [
+						"public",
+						"v1",
+						"categories"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UpdateUserPlan",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://apicadeteria-mgrj1ujvk-cesars-projects-2539e6a6.vercel.app/v1/users/plan",
+					"protocol": "https",
+					"host": [
+						"apicadeteria-mgrj1ujvk-cesars-projects-2539e6a6",
+						"vercel",
+						"app"
+					],
+					"path": [
+						"v1",
+						"users",
+						"plan"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetAllEnvios",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://apicadeteria-mgrj1ujvk-cesars-projects-2539e6a6.vercel.app/v1/envios",
+					"protocol": "https",
+					"host": [
+						"apicadeteria-mgrj1ujvk-cesars-projects-2539e6a6",
+						"vercel",
+						"app"
+					],
+					"path": [
+						"v1",
+						"envios"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Register Envio",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Cache-Control",
+						"value": "no-cache",
+						"type": "text"
+					},
+					{
+						"key": "Postman-Token",
+						"value": "<calculated when request is sent>",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Length",
+						"value": "<calculated when request is sent>",
+						"type": "text"
+					},
+					{
+						"key": "Host",
+						"value": "<calculated when request is sent>",
+						"type": "text"
+					},
+					{
+						"key": "User-Agent",
+						"value": "PostmanRuntime/7.39.1",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "*/*",
+						"type": "text"
+					},
+					{
+						"key": "Accept-Encoding",
+						"value": "gzip, deflate, br",
+						"type": "text"
+					},
+					{
+						"key": "Connection",
+						"value": "keep-alive",
+						"type": "text"
+					},
+					{
+						"key": "Authorization",
+						"value": "{{auth_token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"origen\": {\n    \"calle\": \"Avenida\",\n    \"numero\": \"1234\",\n    \"ciudad\": \"Montevideo\"\n  },\n  \"destino\": {\n    \"calle\": \"Argentina\",\n    \"numero\": \"5678\",\n    \"ciudad\": \"Buenos aires\"\n  },\n  \"fechaRetiro\": \"10/09/2025\",\n  \"horaRetiroAprox\": \"14:30\",\n  \"tamanoPaquete\": \"mediano\",\n  \"notas\": \"Entregar en recepción, paquete frágil\",\n  \"categoria\": {\n    \"nombre\": \"Documentación\",\n    \"descripcion\": \"Carpeta con papeles importantes\"\n  }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://apicadeteria-mgrj1ujvk-cesars-projects-2539e6a6.vercel.app/v1/envios",
+					"protocol": "https",
+					"host": [
+						"apicadeteria-mgrj1ujvk-cesars-projects-2539e6a6",
+						"vercel",
+						"app"
+					],
+					"path": [
+						"v1",
+						"envios"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetEnvioById",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Cache-Control",
+						"value": "no-cache",
+						"type": "text"
+					},
+					{
+						"key": "Postman-Token",
+						"value": "<calculated when request is sent>",
+						"type": "text"
+					},
+					{
+						"key": "Host",
+						"value": "<calculated when request is sent>",
+						"type": "text"
+					},
+					{
+						"key": "User-Agent",
+						"value": "PostmanRuntime/7.39.1",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "*/*",
+						"type": "text"
+					},
+					{
+						"key": "Accept-Encoding",
+						"value": "gzip, deflate, br",
+						"type": "text"
+					},
+					{
+						"key": "Connection",
+						"value": "keep-alive",
+						"type": "text"
+					},
+					{
+						"key": "authorization",
+						"value": "{{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://apicadeteria-mgrj1ujvk-cesars-projects-2539e6a6.vercel.app/v1/envios/<aqui envio>",
+					"protocol": "https",
+					"host": [
+						"apicadeteria-mgrj1ujvk-cesars-projects-2539e6a6",
+						"vercel",
+						"app"
+					],
+					"path": [
+						"v1",
+						"envios",
+						"<aqui envio>"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": "",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Envio",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Cache-Control",
+						"value": "no-cache",
+						"type": "text"
+					},
+					{
+						"key": "Postman-Token",
+						"value": "<calculated when request is sent>",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Length",
+						"value": "<calculated when request is sent>",
+						"type": "text"
+					},
+					{
+						"key": "Host",
+						"value": "<calculated when request is sent>",
+						"type": "text"
+					},
+					{
+						"key": "User-Agent",
+						"value": "PostmanRuntime/7.39.1",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "*/*",
+						"type": "text"
+					},
+					{
+						"key": "Accept-Encoding",
+						"value": "gzip, deflate, br",
+						"type": "text"
+					},
+					{
+						"key": "Connection",
+						"value": "keep-alive",
+						"type": "text"
+					},
+					{
+						"key": "authorization",
+						"value": "{{auth_token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "  {\n    \"estado\": \"entregado\",\n    \"notas\": \"Paquete entregado satisfactoriamente al destinatario\"\n  }\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://apicadeteria-mgrj1ujvk-cesars-projects-2539e6a6.vercel.app/v1/envios/<aqui envio>",
+					"protocol": "https",
+					"host": [
+						"apicadeteria-mgrj1ujvk-cesars-projects-2539e6a6",
+						"vercel",
+						"app"
+					],
+					"path": [
+						"v1",
+						"envios",
+						"<aqui envio>"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": "",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DeleteEnvioById",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Cache-Control",
+						"value": "no-cache",
+						"type": "text"
+					},
+					{
+						"key": "Postman-Token",
+						"value": "<calculated when request is sent>",
+						"type": "text"
+					},
+					{
+						"key": "Host",
+						"value": "<calculated when request is sent>",
+						"type": "text"
+					},
+					{
+						"key": "User-Agent",
+						"value": "PostmanRuntime/7.39.1",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "*/*",
+						"type": "text"
+					},
+					{
+						"key": "Accept-Encoding",
+						"value": "gzip, deflate, br",
+						"type": "text"
+					},
+					{
+						"key": "Connection",
+						"value": "keep-alive",
+						"type": "text"
+					},
+					{
+						"key": "authorization",
+						"value": "{{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://apicadeteria-mgrj1ujvk-cesars-projects-2539e6a6.vercel.app/v1/envios/<aqui envio>",
+					"protocol": "https",
+					"host": [
+						"apicadeteria-mgrj1ujvk-cesars-projects-2539e6a6",
+						"vercel",
+						"app"
+					],
+					"path": [
+						"v1",
+						"envios",
+						"<aqui envio>"
+					],
+					"query": [
+						{
+							"key": "Authorization",
+							"value": "",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
