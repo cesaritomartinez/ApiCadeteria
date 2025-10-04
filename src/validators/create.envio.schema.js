@@ -7,6 +7,12 @@ const direccionSchema = Joi.object({
   referencia: Joi.string().trim().allow(''),
 });
 
+// acepta category como string o como objeto { nombre, descripcion? }
+const categoryObject = Joi.object({
+  nombre: Joi.string().trim().required(),
+  descripcion: Joi.string().trim().allow('', null),
+});
+
 const createEnvioSchema = Joi.object({
   origen: direccionSchema.required(),
   destino: direccionSchema.required(),
@@ -20,7 +26,7 @@ const createEnvioSchema = Joi.object({
   tamanoPaquete: Joi.string().valid('chico', 'mediano', 'grande').required(),
   notas: Joi.string().trim().max(500).allow(''),
 
-    //Acepta string o { nombre, descripcion? } 
+  // ✅ Acepta string o { nombre, descripcion? } — opcional
   category: Joi.alternatives()
     .try(
       Joi.string().trim().allow(null, ''),
@@ -31,10 +37,10 @@ const createEnvioSchema = Joi.object({
       'alternatives.types': 'La categoría debe ser texto o un objeto { nombre } válido'
     }),
 
-  // OPCIONAL: por ObjectId
+  // ✅ También opcional por ObjectId
   categoryId: Joi.string().length(24).hex().optional()
 })
-  // No rechazar claves extra (p.ej., "categoria" del Swagger viejo)
-  .unknown(true);
+// ✅ Evita que falle por claves extra como "categoria" si la normalización no corriera
+.unknown(true);
 
 module.exports = createEnvioSchema;
