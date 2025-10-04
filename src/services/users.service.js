@@ -91,7 +91,7 @@ const getUserByUserName = async (username) =>
   await User.findOne({ username: username });
 
 const getUserByEmail = async (email) =>
-  await User.findOne({ email: email.toLowerCase().trim() });
+  await User.findOne({ email: email });
 
 const updateUserPlan = async (userId) => {
   try {
