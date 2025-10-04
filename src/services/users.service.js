@@ -58,6 +58,13 @@ const registerUser = async ({
     throw error;
   }
 
+  if (await getUserByEmail(email)) {
+    let error = new Error("user already exists");
+    error.status = "conflict";
+    error.code = StatusCodes.CONFLICT;
+    throw error;
+  }
+
   const hashedPassword = await bcrypt.hash(password, 10);
   const newUser = new User({
     username: username,
@@ -82,6 +89,9 @@ const registerUser = async ({
 
 const getUserByUserName = async (username) =>
   await User.findOne({ username: username });
+
+const getUserByEmail = async (email) =>
+  await User.findOne({ email: email.toLowerCase().trim() });
 
 const updateUserPlan = async (userId) => {
   try {
