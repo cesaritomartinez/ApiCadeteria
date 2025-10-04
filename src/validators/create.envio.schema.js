@@ -20,10 +20,16 @@ const createEnvioSchema = Joi.object({
   tamanoPaquete: Joi.string().valid('chico', 'mediano', 'grande').required(),
   notas: Joi.string().trim().max(500).allow(''),
 
-  // OPCIONAL: por nombre
-  category: Joi.string().trim().allow(null, '').messages({
-    'string.base': 'La categoría debe ser un texto válido'
-  }),
+    //Acepta string o { nombre, descripcion? } 
+  category: Joi.alternatives()
+    .try(
+      Joi.string().trim().allow(null, ''),
+      categoryObject
+    )
+    .optional()
+    .messages({
+      'alternatives.types': 'La categoría debe ser texto o un objeto { nombre } válido'
+    }),
 
   // OPCIONAL: por ObjectId
   categoryId: Joi.string().length(24).hex().optional()
