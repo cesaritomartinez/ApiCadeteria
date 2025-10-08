@@ -17,10 +17,7 @@ const registerEnvio = async (req, res) => {
     return;
   }
 
-   // (Logs temporales, podés quitarlos luego)
-  console.log('[POST /v1/envios] controller:', __filename);
-  console.log('[SCHEMA PATH]', require.resolve("../validators/create.envio.schema"));
-  console.log('RAW BODY >>>', JSON.stringify(body));
+
 
   //  Normalizar alias y tipos ANTES de validar
   if (body?.categoria && !body.category && !body.categoryId) {
@@ -37,14 +34,14 @@ const registerEnvio = async (req, res) => {
     body.category = String(body.category.nombre || "").trim();
   }
 
-   console.log('BODY NORMALIZADO >>>', JSON.stringify(body));
+  
 
   // Validación con “paraguas” por si el schema cargado no tiene .unknown(true)
   const { error } = createEnvioSchema.validate(body, {
     abortEarly: true,
     allowUnknown: true,
   });
-  
+
   if (error) {
     const errorMessage = error.details[0].message;
     res
@@ -106,8 +103,7 @@ const getAllEnvios = async (req, res) => {
       envios = await enviosService.getEnviosByUserId(req.userId, req.query);
     }
 
-    //enviosFiltrados = enviosService.filtrarEnvios(envios, filtros);
-    console.log("Envios filtrados", enviosFiltrados);
+    
 
     res.status(StatusCodes.OK).json(envios);
   } catch (error) {

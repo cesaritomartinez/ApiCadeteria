@@ -9,10 +9,7 @@ const registerSchema = Joi.object({
   confirmPassword: Joi.string().min(4).required().valid(Joi.ref("password")),
 });
 
-// const loginSchema = Joi.object({
-//   email: Joi.string().email().required(),
-//   password: Joi.string().min(4).required(),
-// });
+
 
 const envioSchema = Joi.object({
   userId: Joi.number().integer().positive().required(),

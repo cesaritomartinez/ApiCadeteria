@@ -89,7 +89,7 @@
 					}
 				},
 				"url": {
-					"raw": "https://apicadeteria-mgrj1ujvk-cesars-projects-2539e6a6.vercel.app/public/v1/login",
+					"raw": "https://apicadeteria-mgrj1ujvk-cesars-projects-2539e6a6.vercel.app/public/v1/loginReal",
 					"protocol": "https",
 					"host": [
 						"apicadeteria-mgrj1ujvk-cesars-projects-2539e6a6",
@@ -99,7 +99,7 @@
 					"path": [
 						"public",
 						"v1",
-						"login"
+						"loginReal"
 					]
 				}
 			},

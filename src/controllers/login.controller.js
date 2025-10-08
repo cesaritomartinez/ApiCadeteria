@@ -28,11 +28,10 @@ const login = async (req, res) => {
     return;
   }
 
-  // (2) const user = await User.findOne({ username: body.username });
-  // (1) const user = await doLogin(body);
+ 
   const token = await usersService.doLogin(body);
 
-  console.log(token);
+  
 
   if (!token) {
     res
@@ -41,7 +40,7 @@ const login = async (req, res) => {
     return;
   }
 
-  // const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: "1h" });
+  
 
   res.status(StatusCodes.OK).json({ token: token });
 };

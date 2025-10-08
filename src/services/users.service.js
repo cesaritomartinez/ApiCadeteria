@@ -8,7 +8,7 @@ const doLogin = async ({ username, password }) => {
   const user = await User.findOne({ username }).select("+password");
 
   if (!user) {
-    console.log("Usuario no encontrado:", username);
+    
     return null;
   }
 
@@ -35,12 +35,7 @@ const doLogin = async ({ username, password }) => {
     }
   );
 
-  // return {
-  //   username: user.username,
-  //   name: user.nombre,
-  //   userId: user,
-  //   role: user.role,
-  // };
+ 
   return { token: token, user: buildUserDTOResponse(user) };
 };
 
@@ -79,7 +74,7 @@ const registerUser = async ({
     const userDTO = buildUserDTOResponse(savedUser);
     return userDTO;
   } catch (error) {
-    console.log("Error saving user in database", error);
+    
     let e = new Error("error saving user in database");
     e.status = "internal_server_error";
     e.code = StatusCodes.INTERNAL_SERVER_ERROR;

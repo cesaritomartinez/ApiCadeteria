@@ -356,7 +356,7 @@ const createUser = async ({ username, password, name, lastname, email }) => {
   /* let newUser = { ...body, id: userId++, active: true } */
   usuarios.push(newUser);
 
-  console.log(usuarios);
+  
 
   let userResponse = { ...newUser };
   //sacamos las propiedades password y ID que devolvemos en la respuesta

@@ -83,7 +83,7 @@
         }
       }
     },
-    "/public/v1/loginReal": {
+    "/public/v1/login": {
       "post": {
         "tags": ["Auth"],
         "summary": "Login",
@@ -207,7 +207,7 @@
                     "horaRetiroAprox": "14:30",
                     "tamanoPaquete": "mediano",
                     "notas": "Entregar en recepción, paquete frágil",
-                    "category": { "nombre": "Documentación", "descripcion": "Papeles importantes" }
+                    "category": { "nombre": "Documentación" }
                   }
                 }
               }

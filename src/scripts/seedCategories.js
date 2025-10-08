@@ -26,14 +26,14 @@ const seedCategories = async () => {
 
     // Limpiar categorías existentes (opcional)
     await Category.deleteMany({});
-    console.log('Categorías anteriores eliminadas');
+    
 
     // Insertar nuevas categorías
     const result = await Category.insertMany(categories);
-    console.log(`${result.length} categorías creadas exitosamente`);
+    
 
     await mongoose.connection.close();
-    console.log('Conexión cerrada');
+    
   } catch (error) {
     console.error('Error al crear categorías:', error);
     process.exit(1);

@@ -73,7 +73,7 @@ const getAllEnviosAdmin = async (queryParams = {}) => {
 
     return allEnviosDB.map(buildEnvioDTOResponse);
   } catch (e) {
-    console.log("Error obteniendo todos los envios (admin)", e);
+    
     const error = new Error("error getting all envios");
     error.status = "internal_server_error";
     error.code = StatusCodes.INTERNAL_SERVER_ERROR;
@@ -81,26 +81,7 @@ const getAllEnviosAdmin = async (queryParams = {}) => {
   }
 };
 
-// const getEnviosByUserId = async (userId, queryParams) => {
-//   try {
-//     console.log("🔍 Buscando envíos para userId:", userId);
-//     const userEnviosDB = await Envio.find({ user: userId });
-//     console.log("📦 Envíos encontrados en DB:", userEnviosDB.length);
 
-//     let enviosResponse = userEnviosDB.map((envio) => {
-//       return buildEnvioDTOResponse(envio);
-//     });
-
-//     console.log("✅ Envíos después del DTO:", enviosResponse.length);
-//     return enviosResponse;
-//   } catch (e) {
-//     console.log("Error obteniendo envios del usuario", e);
-//     let error = new Error("error getting envios for user");
-//     error.status = "internal_server_error";
-//     error.code = StatusCodes.INTERNAL_SERVER_ERROR;
-//     throw error;
-//   }
-// };
 
 const getEnviosByUserId = async (userId, queryParams = {}) => {
   try {
@@ -163,7 +144,7 @@ const getEnviosByUserId = async (userId, queryParams = {}) => {
     const enviosResponse = userEnviosDB.map((e) => buildEnvioDTOResponse(e));
     return enviosResponse;
   } catch (e) {
-    console.log("Error obteniendo envios del usuario", e);
+    
     const error = new Error("error getting envios for user");
     error.status = "internal_server_error";
     error.code = StatusCodes.INTERNAL_SERVER_ERROR;
@@ -261,7 +242,7 @@ const createEnvio = async (envioData, userId) => {
     
     return buildEnvioDTOResponse(savedEnvio);
   } catch (e) {
-    console.log("error guardando envio en la base", e);
+    
     let error = new Error("error saving envio in database");
     error.status = "internal_server_error";
     error.code = StatusCodes.INTERNAL_SERVER_ERROR;
@@ -359,35 +340,29 @@ const findEnvioByIdInDB = async (envioId, userId, userRole = "cliente") => {
 
 const filtrarEnvios = (envios, filtros) => {
   let enviosFiltrados = envios;
-  console.log("🔍 Filtros recibidos:", filtros);
-  console.log("📦 Envíos antes del filtro:", enviosFiltrados.length);
+  
 
   // Filtrar por estado
   if (filtros.estado) {
-    console.log("Filtrando por estado:", filtros.estado);
+    
     enviosFiltrados = enviosFiltrados.filter(
       (envio) => envio.estado === filtros.estado
     );
-    console.log(
-      "Envíos después de filtrar por estado:",
-      enviosFiltrados.length
-    );
+    
   }
 
   // Filtrar por fecha específica
   if (filtros.fecha) {
-    console.log("Filtrando por fecha:", filtros.fecha);
+    
     enviosFiltrados = enviosFiltrados.filter((envio) => {
       const fechaEnvio = new Date(envio.fechaRetiro)
         .toISOString()
         .split("T")[0];
       const fechaFiltro = filtros.fecha;
-      console.log(
-        `Comparando: ${fechaEnvio} vs ${fechaFiltro} para envío ID: ${envio.id}`
-      );
+      
       return fechaEnvio === fechaFiltro;
     });
-    console.log("Envíos después de filtrar por fecha:", enviosFiltrados.length);
+    
   }
 
   // Filtrar por rango de fechas
