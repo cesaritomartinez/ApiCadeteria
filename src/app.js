@@ -16,15 +16,27 @@ const connectMongoDB = require("./repositories/mongo.client");
 setupSwagger(app);
 
 // CORS
-app.use(cors());
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://apicadeteria-oiruptoqe-sanei1509s-projects.vercel.app",
+  // Agrega aquí otros orígenes permitidos
+];
 
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-  if (req.method === "OPTIONS") return res.status(200).end();
-  next();
-});
+app.use(cors({
+  origin: (origin, callback) => {
+    // Permitir requests sin origin (como desde Postman o apps móviles)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("No permitido por CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"]
+}));
 
 
 
