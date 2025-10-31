@@ -26,7 +26,9 @@ const signup = async (req, res) => {
 
   try {
     const newUser = await usersService.registerUser(body);
-    res.status(StatusCodes.CREATED).json({ token: newUser });
+    // ✅ registerUser ya devuelve { token: { token: "...", user: {...} } }
+    // Solo devolvemos directamente lo que retorna
+    res.status(StatusCodes.CREATED).json(newUser);
   } catch (error) {
     if (error.status === "conflict") {
       res
