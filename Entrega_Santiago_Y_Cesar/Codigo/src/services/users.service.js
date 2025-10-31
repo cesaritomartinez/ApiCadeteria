@@ -23,31 +23,38 @@ const doLogin = async ({ username, password }) => {
   }
 
   const token = jwt.sign(
-  {
-    username: user.username,
-    name: user.nombre,
-    userId: user._id.toString(),
-    role: user.role,
-    plan: user.plan,
-  },
-  process.env.JWT_SECRET,
-  { expiresIn: "1h" }
-);
+    {
+      username: user.username,
+      name: user.nombre,
+      userId: user._id.toString(),
+      role: user.role,
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "1h",
+    }
+  );
 
  
   return { token: token, user: buildUserDTOResponse(user) };
 };
 
-const registerUser = async ({ username, password, nombre, apellido, email }) => {
+const registerUser = async ({
+  username,
+  password,
+  nombre,
+  apellido,
+  email,
+}) => {
   if (await getUserByUserName(username)) {
-    const error = new Error("user already exists");
+    let error = new Error("user already exists");
     error.status = "conflict";
     error.code = StatusCodes.CONFLICT;
     throw error;
   }
 
   if (await getUserByEmail(email)) {
-    const error = new Error("mail already exists");
+    let error = new Error("mail already exists");
     error.status = "conflict";
     error.code = StatusCodes.CONFLICT;
     throw error;
@@ -55,51 +62,25 @@ const registerUser = async ({ username, password, nombre, apellido, email }) => 
 
   const hashedPassword = await bcrypt.hash(password, 10);
   const newUser = new User({
-    username,
+    username: username,
     password: hashedPassword,
-    nombre,
-    apellido,
-    email,
-    // role y plan pueden venir por defaults del schema (p.ej. role: "cliente", plan: "plus")
+    nombre: nombre,
+    apellido: apellido,
+    email: email,
   });
 
   try {
     const savedUser = await newUser.save();
-
-    // ⚠️ Asegurate que el DTO NO incluya password
-    const userDTO = buildUserDTOResponse(savedUser); 
-    // Debe tener al menos: id, username, nombre, apellido, email, role, plan
-
-    // 🎯 Mismo estilo que tu doLogin (agregamos plan por consistencia)
-    const tokenStr = jwt.sign(
-      {
-        username: userDTO.username,
-        name: userDTO.nombre,
-        userId: userDTO.id,
-        role: userDTO.role,
-        plan: userDTO.plan, // si tu DTO lo incluye; si no, usar savedUser.plan
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" } // podés usar "7d" si querés sesión más larga
-    );
-
-    // ✅ Devolver MISMO FORMATO que el login
-    return {
-      token: {
-        token: tokenStr,
-        user: userDTO,
-      },
-    };
+    const userDTO = buildUserDTOResponse(savedUser);
+    return userDTO;
   } catch (error) {
-    const e = new Error("error saving user in database");
+    
+    let e = new Error("error saving user in database");
     e.status = "internal_server_error";
     e.code = StatusCodes.INTERNAL_SERVER_ERROR;
     throw e;
   }
 };
-
-
-
 
 const getUserByUserName = async (username) =>
   await User.findOne({ username: username });
