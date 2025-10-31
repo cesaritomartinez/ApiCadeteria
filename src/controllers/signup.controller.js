@@ -26,7 +26,7 @@ const signup = async (req, res) => {
 
   try {
     const newUser = await usersService.registerUser(body);
-    res.status(StatusCodes.CREATED).json(newUser);
+    res.status(StatusCodes.CREATED).json({ token: newUser });
   } catch (error) {
     if (error.status === "conflict") {
       res
