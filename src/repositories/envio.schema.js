@@ -33,7 +33,7 @@ const envioSchema = new mongoose.Schema(
       todayUTC.setUTCHours(0, 0, 0, 0);
       return value >= todayUTC;
     },
-    message: "La fecha de retiro debe ser hoy o una fecha futura",
+    message: "La fecha de retiro debe ser una fecha futura",
       },
     },
     horaRetiroAprox: {
