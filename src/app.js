@@ -20,21 +20,12 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3006",
   "https://apicadeteria-oiruptoqe-sanei1509s-projects.vercel.app",
-  "https://apicadeteria-m0l7xry84-cesars-projects-2539e6a6.vercel.app",
+  "https://apicadeteria-iue65408q-cesars-projects-2539e6a6.vercel.app/",
   // Agrega aquí otros orígenes permitidos
 ];
 
 app.use(cors({
-  origin: (origin, callback) => {
-    // Permitir requests sin origin (como desde Postman o apps móviles)
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("No permitido por CORS"));
-    }
-  },
+  origin: "*",
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"]
