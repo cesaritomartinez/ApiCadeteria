@@ -11,7 +11,7 @@ const updateEnvioSchema = Joi.object({
   origen: direccionSchema,
   destino: direccionSchema,
   fechaRetiro: Joi.date().min('now').messages({
-    'date.min': 'La fecha de retiro debe ser hoy o una fecha futura'
+    'date.min': 'La fecha de retiro debe ser una fecha futura'
   }),
   horaRetiroAprox: Joi.string().pattern(/^([01]\d|2[0-3]):[0-5]\d$/).allow('').messages({
     'string.pattern.base': 'Hora inválida (formato HH:mm)'
