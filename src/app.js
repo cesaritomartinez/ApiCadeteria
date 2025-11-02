@@ -18,6 +18,7 @@ setupSwagger(app);
 // CORS
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://localhost:3006",
   "https://apicadeteria-oiruptoqe-sanei1509s-projects.vercel.app",
   "https://apicadeteria-m0l7xry84-cesars-projects-2539e6a6.vercel.app",
   // Agrega aquí otros orígenes permitidos
