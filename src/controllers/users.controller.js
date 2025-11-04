@@ -33,4 +33,28 @@ const updatePlan = async (req, res) => {
   }
 };
 
-module.exports = { updatePlan };
+const upgradePlan = async (req, res) => {
+  try {
+    const userId = req.userId; // Usuario autenticado desde el middleware
+    const updatedUser = await usersService.updateUserPlan(userId);
+    res.status(StatusCodes.OK).json(updatedUser);
+  } catch (error) {
+    res.status(error.code || StatusCodes.INTERNAL_SERVER_ERROR).json(
+      createError(error.status, error.message)
+    );
+  }
+};
+
+const downgradePlan = async (req, res) => {
+  try {
+    const userId = req.userId; // Usuario autenticado desde el middleware
+    const updatedUser = await usersService.downgradeUserPlan(userId);
+    res.status(StatusCodes.OK).json(updatedUser);
+  } catch (error) {
+    res.status(error.code || StatusCodes.INTERNAL_SERVER_ERROR).json(
+      createError(error.status, error.message)
+    );
+  }
+};
+
+module.exports = { updatePlan, upgradePlan, downgradePlan };

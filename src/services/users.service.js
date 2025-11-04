@@ -109,7 +109,6 @@ const getUserByEmail = async (email) =>
 
 const updateUserPlan = async (userId) => {
   try {
-    // Buscar el usuario por ID
     const user = await User.findById(userId);
 
     if (!user) {
@@ -137,8 +136,40 @@ const updateUserPlan = async (userId) => {
   }
 };
 
+const downgradeUserPlan = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      const error = new Error("Usuario no encontrado");
+      error.status = "not_found";
+      error.code = StatusCodes.NOT_FOUND;
+      throw error;
+    }
+
+    // Validar que el usuario esté en plan "premium"
+    if (user.plan !== "premium") {
+      const error = new Error(
+        "Solo los usuarios con plan 'premium' pueden cancelar a 'plus'"
+      );
+      error.status = "bad_request";
+      error.code = StatusCodes.BAD_REQUEST;
+      throw error;
+    }
+
+    // Actualizar el plan a plus
+    user.plan = "plus";
+    const updatedUser = await user.save();
+
+    return buildUserDTOResponse(updatedUser);
+  } catch (error) {
+    throw error;
+  }
+};
+
 module.exports = {
   doLogin,
   registerUser,
   updateUserPlan,
+  downgradeUserPlan,
 };

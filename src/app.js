@@ -12,28 +12,39 @@ const signupRouter = require("./routes/signup.router");
 
 const connectMongoDB = require("./repositories/mongo.client");
 
-// Swagger documentation (ANTES de todo para que funcione en Vercel)
-setupSwagger(app);
-
-// CORS
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:3006",
-  "https://apicadeteria-oiruptoqe-sanei1509s-projects.vercel.app",
-  "https://apicadeteria-iue65408q-cesars-projects-2539e6a6.vercel.app/",
-  // Agrega aquí otros orígenes permitidos
-];
-
-app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"]
-}));
-
-
-
+// CORS - ANTES DE TODO
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 app.use(express.json());
+
+// Middleware para garantizar conexión a MongoDB en TODAS las requests
+// Esto es crucial para Vercel donde cada request puede ser en una instancia nueva
+app.use(async (req, res, next) => {
+  try {
+    await connectMongoDB();
+    next();
+  } catch (error) {
+    console.error("Error conectando a MongoDB:", error.message);
+    res.status(503).json({
+      error: "Servicio no disponible",
+      message: "No se pudo conectar a la base de datos",
+    });
+  }
+});
+
+// Swagger documentation (ANTES de todo para que funcione en Vercel)
+setupSwagger(app);
 
 // Rutas públicas
 app.use("/public/v1", signupRouter);
@@ -60,16 +71,25 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Conexión a MongoDB
-connectMongoDB().catch(console.error);
-
-// Arranque del servidor (solo en desarrollo local, no en Vercel)
+// Arranque del servidor
 if (process.env.NODE_ENV !== 'production') {
   const port = process.env.PORT || 3006;
-  app.listen(port, () => {
-    console.log("App started and listening in port " + port);
-  });
+
+  // En desarrollo, conectar ANTES de iniciar el servidor
+  connectMongoDB()
+    .then(() => {
+      console.log("✅ MongoDB conectado");
+      app.listen(port, () => {
+        console.log(`🚀 Servidor escuchando en puerto ${port}`);
+      });
+    })
+    .catch((error) => {
+      console.error("❌ Error fatal conectando a MongoDB:", error.message);
+      console.error("Stack:", error.stack);
+      process.exit(1);
+    });
 }
+// En producción (Vercel), el middleware maneja la conexión automáticamente con caché
 
 // Exportar para Vercel (serverless)
 module.exports = app;

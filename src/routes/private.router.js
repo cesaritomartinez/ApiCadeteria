@@ -8,7 +8,11 @@ const {
   deleteEnvio,
   updateEnvio,
 } = require("../controllers/envios.controller");
-const usersController = require("../controllers/users.controller");
+const {
+  updatePlan,
+  upgradePlan,
+  downgradePlan,
+} = require("../controllers/users.controller");
 
 // Aplicar middleware de autenticación a todas las rutas privadas
 router.use(authMiddleware);
@@ -26,6 +30,8 @@ router.put("/envios/:id", updateEnvio);
 router.delete("/envios/:id", deleteEnvio); // Eliminar envios
 
 // Usuarios - Cambio de plan
-router.put("/users/plan", usersController.updatePlan);
+router.put("/users/plan", updatePlan); // Admin cambia plan de cualquier usuario
+router.post("/users/upgrade-plan", upgradePlan); // Usuario cambia su propio plan
+router.post("/users/downgrade-plan", downgradePlan); // Usuario cancela su plan premium
 
 module.exports = router;
