@@ -1,8 +1,12 @@
 const User = require("../models/user.model");
+const Envio = require("../models/envio.model");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const { StatusCodes } = require("http-status-codes");
 const buildUserDTOResponse = require("../dtos/user.response.dto");
+
+// Límite de envíos pendientes para plan plus
+const MAX_PLAN_PLUS = parseInt(process.env.MAX_PLAN_PLUS) || 10;
 
 const doLogin = async ({ username, password }) => {
   const user = await User.findOne({ username }).select("+password");
@@ -151,6 +155,21 @@ const downgradeUserPlan = async (userId) => {
     if (user.plan !== "premium") {
       const error = new Error(
         "Solo los usuarios con plan 'premium' pueden cancelar a 'plus'"
+      );
+      error.status = "bad_request";
+      error.code = StatusCodes.BAD_REQUEST;
+      throw error;
+    }
+
+    // Validar que el usuario no tenga más de 10 envíos pendientes
+    const enviosPendientes = await Envio.countDocuments({
+      user: userId,
+      estado: "pendiente"
+    });
+
+    if (enviosPendientes > MAX_PLAN_PLUS) {
+      const error = new Error(
+        `No puedes cancelar tu plan premium porque tienes ${enviosPendientes} envíos pendientes. El plan plus solo permite hasta ${MAX_PLAN_PLUS} envíos pendientes.`
       );
       error.status = "bad_request";
       error.code = StatusCodes.BAD_REQUEST;

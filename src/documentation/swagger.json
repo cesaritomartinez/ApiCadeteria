@@ -380,6 +380,67 @@
           "500": { "$ref": "#/components/responses/ServerError" }
         }
       }
+    },
+    "/v1/users/downgrade-plan": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "Cancelar plan premium del usuario autenticado",
+        "description": "Permite a un usuario autenticado cancelar su plan premium y volver a 'plus'. Solo funciona si el usuario tiene 10 o menos envíos pendientes. No requiere permisos de administrador.",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Plan cancelado exitosamente",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" },
+                "examples": {
+                  "success": {
+                    "value": {
+                      "id": "507f1f77bcf86cd799439011",
+                      "username": "usuario1",
+                      "email": "usuario1@example.com",
+                      "nombre": "César",
+                      "apellido": "Martínez",
+                      "role": "cliente",
+                      "plan": "plus",
+                      "fechaCreacion": "2025-09-26T15:37:01.517Z",
+                      "fechaActualizacion": "2025-11-04T10:30:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Usuario no puede cancelar el plan",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "examples": {
+                  "notPremium": {
+                    "value": {
+                      "status": "bad_request",
+                      "message": "Solo los usuarios con plan 'premium' pueden cancelar a 'plus'"
+                    }
+                  },
+                  "tooManyPendingShipments": {
+                    "value": {
+                      "status": "bad_request",
+                      "message": "No puedes cancelar tu plan premium porque tienes 15 envíos pendientes. El plan plus solo permite hasta 10 envíos pendientes."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": {
+            "description": "Usuario no encontrado",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+          },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
     }
   },
   "components": {
