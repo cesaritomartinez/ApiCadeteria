@@ -12,6 +12,7 @@ const {
   updatePlan,
   upgradePlan,
   downgradePlan,
+  getAllUsers,
 } = require("../controllers/users.controller");
 
 // Aplicar middleware de autenticación a todas las rutas privadas
@@ -29,7 +30,8 @@ router.put("/envios/:id", updateEnvio);
 
 router.delete("/envios/:id", deleteEnvio); // Eliminar envios
 
-// Usuarios - Cambio de plan
+// Usuarios - Gestión
+router.get("/users", getAllUsers); // Admin obtiene lista de usuarios
 router.put("/users/plan", updatePlan); // Admin cambia plan de cualquier usuario
 router.post("/users/upgrade-plan", upgradePlan); // Usuario cambia su propio plan
 router.post("/users/downgrade-plan", downgradePlan); // Usuario cancela su plan premium

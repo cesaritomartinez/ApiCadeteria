@@ -186,9 +186,25 @@ const downgradeUserPlan = async (userId) => {
   }
 };
 
+const getAllUsers = async () => {
+  try {
+    const users = await User.find()
+      .select('-password') // Excluir password por seguridad
+      .sort({ fechaCreacion: -1 }); // Ordenar por más recientes primero
+
+    return users.map(user => buildUserDTOResponse(user));
+  } catch (error) {
+    const err = new Error("Error obteniendo usuarios de la base de datos");
+    err.status = "internal_server_error";
+    err.code = StatusCodes.INTERNAL_SERVER_ERROR;
+    throw err;
+  }
+};
+
 module.exports = {
   doLogin,
   registerUser,
   updateUserPlan,
   downgradeUserPlan,
+  getAllUsers,
 };

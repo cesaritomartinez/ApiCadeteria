@@ -57,4 +57,24 @@ const downgradePlan = async (req, res) => {
   }
 };
 
-module.exports = { updatePlan, upgradePlan, downgradePlan };
+const getAllUsers = async (req, res) => {
+  try {
+    const userRole = req.userRole;
+
+    // Solo admin puede obtener la lista de usuarios
+    if (userRole !== 'admin') {
+      return res.status(StatusCodes.FORBIDDEN).json(
+        createError('forbidden', 'Solo los administradores pueden ver la lista de usuarios')
+      );
+    }
+
+    const users = await usersService.getAllUsers();
+    res.status(StatusCodes.OK).json(users);
+  } catch (error) {
+    res.status(error.code || StatusCodes.INTERNAL_SERVER_ERROR).json(
+      createError(error.status, error.message)
+    );
+  }
+};
+
+module.exports = { updatePlan, upgradePlan, downgradePlan, getAllUsers };

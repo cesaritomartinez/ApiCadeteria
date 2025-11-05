@@ -8,7 +8,7 @@ const buildEnvioDTOResponse = (envio) => {
     horaRetiroAprox: envio.horaRetiroAprox,
     tamanoPaquete: envio.tamanoPaquete,
     notas: envio.notas,
-    categoria: envio.categoria,
+    category: envio.category,
     estado: envio.estado,
     codigoSeguimiento: envio.codigoSeguimiento,
     fechaCreacion: envio.createdAt,
