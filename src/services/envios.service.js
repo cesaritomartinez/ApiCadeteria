@@ -335,7 +335,8 @@ const findEnvioByIdInDB = async (envioId, userId, userRole = "cliente") => {
   }
 
   // Autorización -> 403 (salvo admin)
-  if (userRole !== "admin" && String(envio.user) !== String(userId)) {
+  const ownerId = envio.user && envio.user._id ? String(envio.user._id) : String(envio.user);
+  if (userRole !== "admin" && ownerId !== String(userId)) {
     const err = new Error("not allowed to access this resource");
     err.status = "forbidden";
     err.code = StatusCodes.FORBIDDEN;
