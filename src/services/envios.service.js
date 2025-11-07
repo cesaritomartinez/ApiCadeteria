@@ -285,7 +285,19 @@ const updateEnvio = async (envioId, updateData, userId, userRole = "cliente") =>
     }
 
     // 3) Validar categoría si viene (para ambos roles)
-    if ("category" in updateData && updateData.category) {
+    // Priorizar categoryId si viene
+    if ("categoryId" in updateData && updateData.categoryId) {
+      const catById = await Category.findById(updateData.categoryId);
+      if (!catById) {
+        const error = new Error(`La categoría con id "${updateData.categoryId}" no existe`);
+        error.status = "bad_request";
+        error.code = StatusCodes.BAD_REQUEST;
+        throw error;
+      }
+      envio.category = catById._id;
+    }
+    // Si no viene categoryId, buscar por nombre
+    else if ("category" in updateData && updateData.category) {
       const category = await Category.findOne({ name: updateData.category });
       if (!category) {
         const error = new Error(`La categoría "${updateData.category}" no existe`);
@@ -293,11 +305,21 @@ const updateEnvio = async (envioId, updateData, userId, userRole = "cliente") =>
         error.code = StatusCodes.BAD_REQUEST;
         throw error;
       }
-      updateData.category = category._id; // ojo: si tu modelo usa 'categoria', ajustá el nombre del campo
+      envio.category = category._id;
     }
 
-    Object.assign(envio, updateData);
+    // Asignación manual de campos
+    if (updateData.origen) envio.origen = updateData.origen;
+    if (updateData.destino) envio.destino = updateData.destino;
+    if (updateData.fechaRetiro) envio.fechaRetiro = updateData.fechaRetiro;
+    if (updateData.horaRetiroAprox !== undefined) envio.horaRetiroAprox = updateData.horaRetiroAprox;
+    if (updateData.tamanoPaquete) envio.tamanoPaquete = updateData.tamanoPaquete;
+    if (updateData.notas !== undefined) envio.notas = updateData.notas;
+    if (updateData.estado) envio.estado = updateData.estado;
+
     const updatedEnvio = await envio.save();
+    // Poblar categoría para que el DTO tenga { id, nombre }
+    await updatedEnvio.populate({ path: 'category', select: 'name description' });
     return buildEnvioDTOResponse(updatedEnvio);
   } catch (error) {
     throw error;
@@ -335,8 +357,22 @@ const findEnvioByIdInDB = async (envioId, userId, userRole = "cliente") => {
   }
 
   // Autorización -> 403 (salvo admin)
-  const ownerId = envio.user && envio.user._id ? String(envio.user._id) : String(envio.user);
+  let ownerId;
+  if (envio.user) {
+    // Si user está poblado como objeto, extraer _id o id
+    ownerId = envio.user._id ? String(envio.user._id) : (envio.user.id ? String(envio.user.id) : String(envio.user));
+  } else {
+    // Si user es null/undefined, el envío está huérfano - solo admin puede acceder
+    ownerId = null;
+  }
+
   if (userRole !== "admin" && ownerId !== String(userId)) {
+    console.log('Authorization failed:', {
+      userRole,
+      ownerId,
+      userId: String(userId),
+      userField: envio.user
+    });
     const err = new Error("not allowed to access this resource");
     err.status = "forbidden";
     err.code = StatusCodes.FORBIDDEN;
