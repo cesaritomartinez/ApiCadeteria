@@ -14,6 +14,7 @@ const userSchema = new mongoose.Schema(
     apellido: { type: String, required: true, trim: true },
     role: { type: String, enum: ["admin", "cliente"], default: "cliente" },
     plan: { type: String, enum: ["plus", "premium"], default: "plus" },
+    imageUrl: {type: String, trim: true, default: "", required: false },
   },
   { timestamps: true, versionKey: false }
 );

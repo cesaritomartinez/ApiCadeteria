@@ -8,6 +8,7 @@ const createUserSchema = Joi.object({
   email: Joi.string().email().required().messages({
     "string.email": "Invalid email format. Should be: algo@mail.com",
   }),
+  imageUrl: Joi.string(),
 });
 
 module.exports = createUserSchema;

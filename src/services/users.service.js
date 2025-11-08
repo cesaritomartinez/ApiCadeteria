@@ -42,7 +42,7 @@ const doLogin = async ({ username, password }) => {
   return { token: token, user: buildUserDTOResponse(user) };
 };
 
-const registerUser = async ({ username, password, nombre, apellido, email }) => {
+const registerUser = async ({ username, password, nombre, apellido, email, imageUrl }) => {
   if (await getUserByUserName(username)) {
     const error = new Error("user already exists");
     error.status = "conflict";
@@ -64,7 +64,7 @@ const registerUser = async ({ username, password, nombre, apellido, email }) => 
     nombre,
     apellido,
     email,
-    // role y plan pueden venir por defaults del schema (p.ej. role: "cliente", plan: "plus")
+    imageUrl: imageUrl || "",
   });
 
   try {
