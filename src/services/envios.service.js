@@ -76,7 +76,7 @@ const getAllEnviosAdmin = async (queryParams = {}) => {
 
     return allEnviosDB.map(buildEnvioDTOResponse);
   } catch (e) {
-    
+
     const error = new Error("error getting all envios");
     error.status = "internal_server_error";
     error.code = StatusCodes.INTERNAL_SERVER_ERROR;
@@ -150,7 +150,7 @@ const getEnviosByUserId = async (userId, queryParams = {}) => {
     const enviosResponse = userEnviosDB.map((e) => buildEnvioDTOResponse(e));
     return enviosResponse;
   } catch (e) {
-    
+
     const error = new Error("error getting envios for user");
     error.status = "internal_server_error";
     error.code = StatusCodes.INTERNAL_SERVER_ERROR;
@@ -188,12 +188,12 @@ const deleteEnvio = async (envioId, userId, userRole = "cliente") => {
 const createEnvio = async (envioData, userId) => {
   let categoryId = null;
 
-   // Si viene category como objeto { nombre }, convertir a string (por si algún flujo llama directo)
+  // Si viene category como objeto { nombre }, convertir a string (por si algún flujo llama directo)
   if (envioData.category && typeof envioData.category === 'object') {
     envioData.category = String(envioData.category.nombre || '').trim();
   }
 
-   // 1) Priorizar ID si viene
+  // 1) Priorizar ID si viene
   if (envioData.categoryId) {
     const catById = await Category.findById(envioData.categoryId);
     if (!catById) {
@@ -245,10 +245,10 @@ const createEnvio = async (envioData, userId) => {
     const savedEnvio = await newEnvio.save();
     //categoría para que el DTO tenga { id, nombre }
     await savedEnvio.populate({ path: 'category', select: 'name' });
-    
+
     return buildEnvioDTOResponse(savedEnvio);
   } catch (e) {
-    
+
     let error = new Error("error saving envio in database");
     error.status = "internal_server_error";
     error.code = StatusCodes.INTERNAL_SERVER_ERROR;
@@ -263,184 +263,185 @@ const updateEnvio = async (envioId, updateData, userId, userRole = "cliente") =>
 
     // --- REGLAS SOLO PARA CLIENTE ---
     if (!isAdmin) {
-      // 1) El cliente NO puede cambiar el estado
       if ("estado" in updateData) {
-        const error = new Error("Los clientes no pueden cambiar el estado del envío");
-        error.status = "forbidden";
-        error.code = StatusCodes.FORBIDDEN;
-        throw error;
-      }
+        const desired = String(updateData.estado).toLowerCase();
+        if (desired !== "cancelado") {
+          const error = new Error("Los clientes no pueden cambiar el estado del envío");
+          error.status = "forbidden";
+          error.code = StatusCodes.FORBIDDEN;
+          throw error;
+        }}
 
-      // 2) El cliente solo puede cambiar fecha si es al menos 1 día antes
-      if ("fechaRetiro" in updateData) {
-        const todayUTC = new Date();               todayUTC.setUTCHours(0, 0, 0, 0);
-        const fechaActualUTC = new Date(envio.fechaRetiro); fechaActualUTC.setUTCHours(0, 0, 0, 0);
-        if (todayUTC >= fechaActualUTC) {
-          const err = new Error("No se puede reprogramar la fecha el mismo día del retiro (ni después)");
-          err.status = "bad_request";
-          err.code = StatusCodes.BAD_REQUEST;
-          throw err;
+        // 2) El cliente solo puede cambiar fecha si es al menos 1 día antes
+        if ("fechaRetiro" in updateData) {
+          const todayUTC = new Date(); todayUTC.setUTCHours(0, 0, 0, 0);
+          const fechaActualUTC = new Date(envio.fechaRetiro); fechaActualUTC.setUTCHours(0, 0, 0, 0);
+          if (todayUTC >= fechaActualUTC) {
+            const err = new Error("No se puede reprogramar la fecha el mismo día del retiro (ni después)");
+            err.status = "bad_request";
+            err.code = StatusCodes.BAD_REQUEST;
+            throw err;
+          }
         }
       }
-    }
 
-    // 3) Validar categoría si viene (para ambos roles)
-    // Priorizar categoryId si viene
-    if ("categoryId" in updateData && updateData.categoryId) {
-      const catById = await Category.findById(updateData.categoryId);
-      if (!catById) {
-        const error = new Error(`La categoría con id "${updateData.categoryId}" no existe`);
-        error.status = "bad_request";
-        error.code = StatusCodes.BAD_REQUEST;
-        throw error;
+      // 3) Validar categoría si viene (para ambos roles)
+      // Priorizar categoryId si viene
+      if ("categoryId" in updateData && updateData.categoryId) {
+        const catById = await Category.findById(updateData.categoryId);
+        if (!catById) {
+          const error = new Error(`La categoría con id "${updateData.categoryId}" no existe`);
+          error.status = "bad_request";
+          error.code = StatusCodes.BAD_REQUEST;
+          throw error;
+        }
+        envio.category = catById._id;
       }
-      envio.category = catById._id;
-    }
-    // Si no viene categoryId, buscar por nombre
-    else if ("category" in updateData && updateData.category) {
-      const category = await Category.findOne({ name: updateData.category });
-      if (!category) {
-        const error = new Error(`La categoría "${updateData.category}" no existe`);
-        error.status = "bad_request";
-        error.code = StatusCodes.BAD_REQUEST;
-        throw error;
+      // Si no viene categoryId, buscar por nombre
+      else if ("category" in updateData && updateData.category) {
+        const category = await Category.findOne({ name: updateData.category });
+        if (!category) {
+          const error = new Error(`La categoría "${updateData.category}" no existe`);
+          error.status = "bad_request";
+          error.code = StatusCodes.BAD_REQUEST;
+          throw error;
+        }
+        envio.category = category._id;
       }
-      envio.category = category._id;
+
+      // Asignación manual de campos
+      if (updateData.origen) envio.origen = updateData.origen;
+      if (updateData.destino) envio.destino = updateData.destino;
+      if (updateData.fechaRetiro) envio.fechaRetiro = updateData.fechaRetiro;
+      if (updateData.horaRetiroAprox !== undefined) envio.horaRetiroAprox = updateData.horaRetiroAprox;
+      if (updateData.tamanoPaquete) envio.tamanoPaquete = updateData.tamanoPaquete;
+      if (updateData.notas !== undefined) envio.notas = updateData.notas;
+      if (updateData.estado) envio.estado = updateData.estado;
+
+      const updatedEnvio = await envio.save();
+      // Poblar categoría para que el DTO tenga { id, nombre }
+      await updatedEnvio.populate({ path: 'category', select: 'name description' });
+      return buildEnvioDTOResponse(updatedEnvio);
+    } catch (error) {
+      throw error;
     }
-
-    // Asignación manual de campos
-    if (updateData.origen) envio.origen = updateData.origen;
-    if (updateData.destino) envio.destino = updateData.destino;
-    if (updateData.fechaRetiro) envio.fechaRetiro = updateData.fechaRetiro;
-    if (updateData.horaRetiroAprox !== undefined) envio.horaRetiroAprox = updateData.horaRetiroAprox;
-    if (updateData.tamanoPaquete) envio.tamanoPaquete = updateData.tamanoPaquete;
-    if (updateData.notas !== undefined) envio.notas = updateData.notas;
-    if (updateData.estado) envio.estado = updateData.estado;
-
-    const updatedEnvio = await envio.save();
-    // Poblar categoría para que el DTO tenga { id, nombre }
-    await updatedEnvio.populate({ path: 'category', select: 'name description' });
-    return buildEnvioDTOResponse(updatedEnvio);
-  } catch (error) {
-    throw error;
-  }
-};
+  };
 
 
-const findEnvioByIdInDB = async (envioId, userId, userRole = "cliente") => {
-  let envio;
-  try {
-    envio = await Envio.findById(envioId)
-      .populate('user', 'username email nombre apellido role plan')
-      .populate('category', 'name description');
-  } catch (e) {
-    // ID con formato inválido -> CastError => 400
-    if (e.name === "CastError") {
-      const err = new Error("invalid envio id");
-      err.status = "bad_request";
-      err.code = StatusCodes.BAD_REQUEST;
+  const findEnvioByIdInDB = async (envioId, userId, userRole = "cliente") => {
+    let envio;
+    try {
+      envio = await Envio.findById(envioId)
+        .populate('user', 'username email nombre apellido role plan')
+        .populate('category', 'name description');
+    } catch (e) {
+      // ID con formato inválido -> CastError => 400
+      if (e.name === "CastError") {
+        const err = new Error("invalid envio id");
+        err.status = "bad_request";
+        err.code = StatusCodes.BAD_REQUEST;
+        throw err;
+      }
+      // Otros problemas de DB -> 500
+      const err = new Error("error getting envio in database");
+      err.status = "internal_server_error";
+      err.code = StatusCodes.INTERNAL_SERVER_ERROR;
       throw err;
     }
-    // Otros problemas de DB -> 500
-    const err = new Error("error getting envio in database");
-    err.status = "internal_server_error";
-    err.code = StatusCodes.INTERNAL_SERVER_ERROR;
-    throw err;
-  }
 
-  // ID válido pero no existe -> 404
-  if (!envio) {
-    const err = new Error("envio was not found in database");
-    err.status = "not_found";
-    err.code = StatusCodes.NOT_FOUND;
-    throw err;
-  }
+    // ID válido pero no existe -> 404
+    if (!envio) {
+      const err = new Error("envio was not found in database");
+      err.status = "not_found";
+      err.code = StatusCodes.NOT_FOUND;
+      throw err;
+    }
 
-  // Autorización -> 403 (salvo admin)
-  let ownerId;
-  if (envio.user) {
-    // Si user está poblado como objeto, extraer _id o id
-    ownerId = envio.user._id ? String(envio.user._id) : (envio.user.id ? String(envio.user.id) : String(envio.user));
-  } else {
-    // Si user es null/undefined, el envío está huérfano - solo admin puede acceder
-    ownerId = null;
-  }
+    // Autorización -> 403 (salvo admin)
+    let ownerId;
+    if (envio.user) {
+      // Si user está poblado como objeto, extraer _id o id
+      ownerId = envio.user._id ? String(envio.user._id) : (envio.user.id ? String(envio.user.id) : String(envio.user));
+    } else {
+      // Si user es null/undefined, el envío está huérfano - solo admin puede acceder
+      ownerId = null;
+    }
 
-  if (userRole !== "admin" && ownerId !== String(userId)) {
-    console.log('Authorization failed:', {
-      userRole,
-      ownerId,
-      userId: String(userId),
-      userField: envio.user
-    });
-    const err = new Error("not allowed to access this resource");
-    err.status = "forbidden";
-    err.code = StatusCodes.FORBIDDEN;
-    throw err;
-  }
+    if (userRole !== "admin" && ownerId !== String(userId)) {
+      console.log('Authorization failed:', {
+        userRole,
+        ownerId,
+        userId: String(userId),
+        userField: envio.user
+      });
+      const err = new Error("not allowed to access this resource");
+      err.status = "forbidden";
+      err.code = StatusCodes.FORBIDDEN;
+      throw err;
+    }
 
 
-  return envio;
-};
+    return envio;
+  };
 
-const filtrarEnvios = (envios, filtros) => {
-  let enviosFiltrados = envios;
-  
+  const filtrarEnvios = (envios, filtros) => {
+    let enviosFiltrados = envios;
 
-  // Filtrar por estado
-  if (filtros.estado) {
-    
-    enviosFiltrados = enviosFiltrados.filter(
-      (envio) => envio.estado === filtros.estado
-    );
-    
-  }
 
-  // Filtrar por fecha específica
-  if (filtros.fecha) {
-    
-    enviosFiltrados = enviosFiltrados.filter((envio) => {
-      const fechaEnvio = new Date(envio.fechaRetiro)
-        .toISOString()
-        .split("T")[0];
-      const fechaFiltro = filtros.fecha;
-      
-      return fechaEnvio === fechaFiltro;
-    });
-    
-  }
+    // Filtrar por estado
+    if (filtros.estado) {
 
-  // Filtrar por rango de fechas
-  if (filtros.fechaDesde) {
-    const fechaDesde = new Date(filtros.fechaDesde);
-    enviosFiltrados = enviosFiltrados.filter(
-      (envio) => new Date(envio.fechaRetiro) >= fechaDesde
-    );
-  }
+      enviosFiltrados = enviosFiltrados.filter(
+        (envio) => envio.estado === filtros.estado
+      );
 
-  if (filtros.fechaHasta) {
-    const fechaHasta = new Date(filtros.fechaHasta);
-    fechaHasta.setHours(23, 59, 59, 999); // Hasta el final del día
-    enviosFiltrados = enviosFiltrados.filter(
-      (envio) => new Date(envio.fechaRetiro) <= fechaHasta
-    );
-  }
+    }
 
-  return enviosFiltrados;
-};
+    // Filtrar por fecha específica
+    if (filtros.fecha) {
 
-//cuenta la cantidad de envios con estado pendiente de un usuario
-const countPendientesByUser = async (userId) => {
-  return Envio.countDocuments({ user: userId, estado: "pendiente" });
-};
+      enviosFiltrados = enviosFiltrados.filter((envio) => {
+        const fechaEnvio = new Date(envio.fechaRetiro)
+          .toISOString()
+          .split("T")[0];
+        const fechaFiltro = filtros.fecha;
 
-module.exports = {
-  findEnvioById,
-  getEnviosByUserId,
-  getAllEnviosAdmin,
-  deleteEnvio,
-  createEnvio,
-  updateEnvio,
-  filtrarEnvios,
-  countPendientesByUser,
-};
+        return fechaEnvio === fechaFiltro;
+      });
+
+    }
+
+    // Filtrar por rango de fechas
+    if (filtros.fechaDesde) {
+      const fechaDesde = new Date(filtros.fechaDesde);
+      enviosFiltrados = enviosFiltrados.filter(
+        (envio) => new Date(envio.fechaRetiro) >= fechaDesde
+      );
+    }
+
+    if (filtros.fechaHasta) {
+      const fechaHasta = new Date(filtros.fechaHasta);
+      fechaHasta.setHours(23, 59, 59, 999); // Hasta el final del día
+      enviosFiltrados = enviosFiltrados.filter(
+        (envio) => new Date(envio.fechaRetiro) <= fechaHasta
+      );
+    }
+
+    return enviosFiltrados;
+  };
+
+  //cuenta la cantidad de envios con estado pendiente de un usuario
+  const countPendientesByUser = async (userId) => {
+    return Envio.countDocuments({ user: userId, estado: "pendiente" });
+  };
+
+  module.exports = {
+    findEnvioById,
+    getEnviosByUserId,
+    getAllEnviosAdmin,
+    deleteEnvio,
+    createEnvio,
+    updateEnvio,
+    filtrarEnvios,
+    countPendientesByUser,
+  };
