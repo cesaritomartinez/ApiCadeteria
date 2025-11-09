@@ -42,7 +42,7 @@ const doLogin = async ({ username, password }) => {
   return { token: token, user: buildUserDTOResponse(user) };
 };
 
-const registerUser = async ({ username, password, nombre, apellido, email, imageUrl }) => {
+const registerUser = async ({ username, password, nombre, apellido, email, imageUrl, empresa }) => {
   if (await getUserByUserName(username)) {
     const error = new Error("user already exists");
     error.status = "conflict";
@@ -65,6 +65,7 @@ const registerUser = async ({ username, password, nombre, apellido, email, image
     apellido,
     email,
     imageUrl: imageUrl || "",
+    empresa: empresa || "",
   });
 
   try {

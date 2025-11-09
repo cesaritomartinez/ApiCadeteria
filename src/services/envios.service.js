@@ -67,7 +67,7 @@ const getAllEnviosAdmin = async (queryParams = {}) => {
     }
 
     const allEnviosDB = await Envio.find(query)
-      .populate('user', 'username email nombre apellido role plan')
+      .populate('user', 'username email nombre apellido role plan empresa')
       .populate('category', 'name description')
       .sort({
         fechaRetiro: 1,
@@ -140,7 +140,7 @@ const getEnviosByUserId = async (userId, queryParams = {}) => {
     }
 
     const userEnviosDB = await Envio.find(query)
-      .populate('user', 'username email nombre apellido role plan')
+      .populate('user', 'username email nombre apellido role plan empresa')
       .populate('category', 'name description')
       .sort({
         fechaRetiro: 1,
@@ -332,7 +332,7 @@ const updateEnvio = async (envioId, updateData, userId, userRole = "cliente") =>
     let envio;
     try {
       envio = await Envio.findById(envioId)
-        .populate('user', 'username email nombre apellido role plan')
+        .populate('user', 'username email nombre apellido role plan empresa')
         .populate('category', 'name description');
     } catch (e) {
       // ID con formato inválido -> CastError => 400

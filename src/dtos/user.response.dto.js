@@ -8,6 +8,7 @@ const buildUserDTOResponse = (user) => {
     role: user.role,
     plan: user.plan,
     imageUrl: user.imageUrl || "",
+    empresa: user.empresa || "",
     fechaCreacion: user.createdAt,
     fechaActualizacion: user.updatedAt,
   };
