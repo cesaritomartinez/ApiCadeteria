@@ -27,44 +27,61 @@ const getAllEnviosAdmin = async (queryParams = {}) => {
         .toLowerCase();
     }
 
-    // Fechas
+
     if (queryParams.fecha) {
-      query.fechaRetiro = new Date(queryParams.fecha); // 'YYYY-MM-DD'
-    } else if (
-      queryParams.fechaDesde ||
-      queryParams.startDate ||
-      queryParams.fechaHasta ||
-      queryParams.endDate
-    ) {
-      const start = queryParams.fechaDesde || queryParams.startDate;
-      const end = queryParams.fechaHasta || queryParams.endDate;
+  // Un día puntual => [00:00:00.000Z, 23:59:59.999Z] del mismo día
+  const inicio = utcStartOfDay(String(queryParams.fecha));
+  const fin = utcEndOfDay(String(queryParams.fecha));
+  query.fechaRetiro = { $gte: inicio, $lte: fin };
+  
+} else if (
+  queryParams.fechaDesde || queryParams.startDate ||
+  queryParams.fechaHasta || queryParams.endDate
+) {
+  // Rango INCLUSIVO en ambos extremos
+  const start = String(queryParams.fechaDesde || queryParams.startDate || '');
+  const end = String(queryParams.fechaHasta || queryParams.endDate || '');
 
-      query.fechaRetiro = {};
-      if (start) query.fechaRetiro.$gte = new Date(start);
-      if (end) query.fechaRetiro.$lte = new Date(end);
-    } else {
-      const ultimos = String(
-        queryParams.ultimos || queryParams.periodo || ""
-      ).toLowerCase();
+  const rango = {};
+  if (start) {
+    rango.$gte = utcStartOfDay(start);
+  }
+  if (end) {
+    rango.$lte = utcEndOfDay(end);  // Inclusivo hasta el final del día
+  }
+  query.fechaRetiro = rango;
+  
+} else {
+  // 'semana' / 'mes' relativos a HOY
+  const ultimos = String(queryParams.ultimos || queryParams.periodo || '').toLowerCase();
+  if (ultimos === 'semana' || ultimos === 'mes') {
+    const now = new Date();
+    
+    // Obtener "hoy" en formato YYYY-MM-DD en UTC
+    const y = now.getUTCFullYear();
+    const m = String(now.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(now.getUTCDate()).padStart(2, '0');
+    const hoyYmd = `${y}-${m}-${d}`;
 
-      if (ultimos === "semana") {
-        const hoy = new Date();
-        hoy.setUTCHours(0, 0, 0, 0);
-        const hace7 = new Date(hoy);
-        hace7.setUTCDate(hoy.getUTCDate() - 7);
-        const finHoy = new Date(hoy);
-        finHoy.setUTCHours(23, 59, 59, 999);
-        query.fechaRetiro = { $gte: hace7, $lte: finHoy };
-      } else if (ultimos === "mes") {
-        const hoy = new Date();
-        hoy.setUTCHours(0, 0, 0, 0);
-        const hace30 = new Date(hoy);
-        hace30.setUTCDate(hoy.getUTCDate() - 30);
-        const finHoy = new Date(hoy);
-        finHoy.setUTCHours(23, 59, 59, 999);
-        query.fechaRetiro = { $gte: hace30, $lte: finHoy };
-      }
-    }
+    // Calcular fecha de inicio (hace 7 o 30 días)
+    const diasAtras = ultimos === 'semana' ? 7 : 30;
+    const inicioDate = new Date(now);
+    inicioDate.setUTCDate(inicioDate.getUTCDate() - diasAtras);
+    
+    const yInicio = inicioDate.getUTCFullYear();
+    const mInicio = String(inicioDate.getUTCMonth() + 1).padStart(2, '0');
+    const dInicio = String(inicioDate.getUTCDate()).padStart(2, '0');
+    const inicioYmd = `${yInicio}-${mInicio}-${dInicio}`;
+
+    const inicio = utcStartOfDay(inicioYmd);
+    const fin = utcEndOfDay(hoyYmd);
+
+    query.fechaRetiro = { $gte: inicio, $lte: fin };
+  }
+  console.log('🔍 Filtros recibidos:', queryParams);
+console.log('🔍 Query MongoDB:', JSON.stringify(query.fechaRetiro));
+}
+
 
     const allEnviosDB = await Envio.find(query)
       .populate('user', 'username email nombre apellido role plan empresa')
@@ -98,46 +115,60 @@ const getEnviosByUserId = async (userId, queryParams = {}) => {
       query.tamanoPaquete = queryParams.tamanoPaquete; // 'chico' | 'mediano' | 'grande'
     }
 
-    // ---- FECHAS ----
-    // 1) fecha puntual (esperado: 'YYYY-MM-DD')
-    if (queryParams.fecha) {
-      query.fechaRetiro = new Date(queryParams.fecha);
-    } else if (
-      queryParams.fechaDesde ||
-      queryParams.startDate ||
-      queryParams.fechaHasta ||
-      queryParams.endDate
-    ) {
-      // 2) rango: fechaDesde/fechaHasta (compat con startDate/endDate)
-      const start = queryParams.fechaDesde || queryParams.startDate;
-      const end = queryParams.fechaHasta || queryParams.endDate;
+  if (queryParams.fecha) {
+  // Un día puntual => [00:00:00.000Z, 23:59:59.999Z] del mismo día
+  const inicio = utcStartOfDay(String(queryParams.fecha));
+  const fin = utcEndOfDay(String(queryParams.fecha));
+  query.fechaRetiro = { $gte: inicio, $lte: fin };
+  
+} else if (
+  queryParams.fechaDesde || queryParams.startDate ||
+  queryParams.fechaHasta || queryParams.endDate
+) {
+  // Rango INCLUSIVO en ambos extremos
+  const start = String(queryParams.fechaDesde || queryParams.startDate || '');
+  const end = String(queryParams.fechaHasta || queryParams.endDate || '');
 
-      query.fechaRetiro = {};
-      if (start) query.fechaRetiro.$gte = new Date(start);
-      if (end) query.fechaRetiro.$lte = new Date(end);
-    } else {
-      const ultimos = String(
-        queryParams.ultimos || queryParams.periodo || ""
-      ).toLowerCase();
+  const rango = {};
+  if (start) {
+    rango.$gte = utcStartOfDay(start);
+  }
+  if (end) {
+    rango.$lte = utcEndOfDay(end);  // Inclusivo hasta el final del día
+  }
+  query.fechaRetiro = rango;
+  
+} else {
+  // 'semana' / 'mes' relativos a HOY
+  const ultimos = String(queryParams.ultimos || queryParams.periodo || '').toLowerCase();
+  if (ultimos === 'semana' || ultimos === 'mes') {
+    const now = new Date();
+    
+    // Obtener "hoy" en formato YYYY-MM-DD en UTC
+    const y = now.getUTCFullYear();
+    const m = String(now.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(now.getUTCDate()).padStart(2, '0');
+    const hoyYmd = `${y}-${m}-${d}`;
 
-      if (ultimos === "semana") {
-        const hoy = new Date();
-        hoy.setUTCHours(0, 0, 0, 0);
-        const hace7 = new Date(hoy);
-        hace7.setUTCDate(hoy.getUTCDate() - 7);
-        const finHoy = new Date(hoy);
-        finHoy.setUTCHours(23, 59, 59, 999);
-        query.fechaRetiro = { $gte: hace7, $lte: finHoy };
-      } else if (ultimos === "mes") {
-        const hoy = new Date();
-        hoy.setUTCHours(0, 0, 0, 0);
-        const hace30 = new Date(hoy);
-        hace30.setUTCDate(hoy.getUTCDate() - 30);
-        const finHoy = new Date(hoy);
-        finHoy.setUTCHours(23, 59, 59, 999);
-        query.fechaRetiro = { $gte: hace30, $lte: finHoy };
-      }
-    }
+    // Calcular fecha de inicio (hace 7 o 30 días)
+    const diasAtras = ultimos === 'semana' ? 7 : 30;
+    const inicioDate = new Date(now);
+    inicioDate.setUTCDate(inicioDate.getUTCDate() - diasAtras);
+    
+    const yInicio = inicioDate.getUTCFullYear();
+    const mInicio = String(inicioDate.getUTCMonth() + 1).padStart(2, '0');
+    const dInicio = String(inicioDate.getUTCDate()).padStart(2, '0');
+    const inicioYmd = `${yInicio}-${mInicio}-${dInicio}`;
+
+    const inicio = utcStartOfDay(inicioYmd);
+    const fin = utcEndOfDay(hoyYmd);
+
+    query.fechaRetiro = { $gte: inicio, $lte: fin };
+  }
+}
+
+
+
 
     const userEnviosDB = await Envio.find(query)
       .populate('user', 'username email nombre apellido role plan empresa')
@@ -270,178 +301,196 @@ const updateEnvio = async (envioId, updateData, userId, userRole = "cliente") =>
           error.status = "forbidden";
           error.code = StatusCodes.FORBIDDEN;
           throw error;
-        }}
-
-        // 2) El cliente solo puede cambiar fecha si es al menos 1 día antes
-        if ("fechaRetiro" in updateData) {
-          const todayUTC = new Date(); todayUTC.setUTCHours(0, 0, 0, 0);
-          const fechaActualUTC = new Date(envio.fechaRetiro); fechaActualUTC.setUTCHours(0, 0, 0, 0);
-          if (todayUTC >= fechaActualUTC) {
-            const err = new Error("No se puede reprogramar la fecha el mismo día del retiro (ni después)");
-            err.status = "bad_request";
-            err.code = StatusCodes.BAD_REQUEST;
-            throw err;
-          }
         }
       }
 
-      // 3) Validar categoría si viene (para ambos roles)
-      // Priorizar categoryId si viene
-      if ("categoryId" in updateData && updateData.categoryId) {
-        const catById = await Category.findById(updateData.categoryId);
-        if (!catById) {
-          const error = new Error(`La categoría con id "${updateData.categoryId}" no existe`);
-          error.status = "bad_request";
-          error.code = StatusCodes.BAD_REQUEST;
-          throw error;
+      // 2) El cliente solo puede cambiar fecha si es al menos 1 día antes
+      if ("fechaRetiro" in updateData) {
+        const todayUTC = new Date(); todayUTC.setUTCHours(0, 0, 0, 0);
+        const fechaActualUTC = new Date(envio.fechaRetiro); fechaActualUTC.setUTCHours(0, 0, 0, 0);
+        if (todayUTC >= fechaActualUTC) {
+          const err = new Error("No se puede reprogramar la fecha el mismo día del retiro (ni después)");
+          err.status = "bad_request";
+          err.code = StatusCodes.BAD_REQUEST;
+          throw err;
         }
-        envio.category = catById._id;
       }
-      // Si no viene categoryId, buscar por nombre
-      else if ("category" in updateData && updateData.category) {
-        const category = await Category.findOne({ name: updateData.category });
-        if (!category) {
-          const error = new Error(`La categoría "${updateData.category}" no existe`);
-          error.status = "bad_request";
-          error.code = StatusCodes.BAD_REQUEST;
-          throw error;
-        }
-        envio.category = category._id;
-      }
-
-      // Asignación manual de campos
-      if (updateData.origen) envio.origen = updateData.origen;
-      if (updateData.destino) envio.destino = updateData.destino;
-      if (updateData.fechaRetiro) envio.fechaRetiro = updateData.fechaRetiro;
-      if (updateData.horaRetiroAprox !== undefined) envio.horaRetiroAprox = updateData.horaRetiroAprox;
-      if (updateData.tamanoPaquete) envio.tamanoPaquete = updateData.tamanoPaquete;
-      if (updateData.notas !== undefined) envio.notas = updateData.notas;
-      if (updateData.estado) envio.estado = updateData.estado;
-
-      const updatedEnvio = await envio.save();
-      // Poblar categoría para que el DTO tenga { id, nombre }
-      await updatedEnvio.populate({ path: 'category', select: 'name description' });
-      return buildEnvioDTOResponse(updatedEnvio);
-    } catch (error) {
-      throw error;
     }
-  };
 
-
-  const findEnvioByIdInDB = async (envioId, userId, userRole = "cliente") => {
-    let envio;
-    try {
-      envio = await Envio.findById(envioId)
-        .populate('user', 'username email nombre apellido role plan empresa')
-        .populate('category', 'name description');
-    } catch (e) {
-      // ID con formato inválido -> CastError => 400
-      if (e.name === "CastError") {
-        const err = new Error("invalid envio id");
-        err.status = "bad_request";
-        err.code = StatusCodes.BAD_REQUEST;
-        throw err;
+    // 3) Validar categoría si viene (para ambos roles)
+    // Priorizar categoryId si viene
+    if ("categoryId" in updateData && updateData.categoryId) {
+      const catById = await Category.findById(updateData.categoryId);
+      if (!catById) {
+        const error = new Error(`La categoría con id "${updateData.categoryId}" no existe`);
+        error.status = "bad_request";
+        error.code = StatusCodes.BAD_REQUEST;
+        throw error;
       }
-      // Otros problemas de DB -> 500
-      const err = new Error("error getting envio in database");
-      err.status = "internal_server_error";
-      err.code = StatusCodes.INTERNAL_SERVER_ERROR;
+      envio.category = catById._id;
+    }
+    // Si no viene categoryId, buscar por nombre
+    else if ("category" in updateData && updateData.category) {
+      const category = await Category.findOne({ name: updateData.category });
+      if (!category) {
+        const error = new Error(`La categoría "${updateData.category}" no existe`);
+        error.status = "bad_request";
+        error.code = StatusCodes.BAD_REQUEST;
+        throw error;
+      }
+      envio.category = category._id;
+    }
+
+    // Asignación manual de campos
+    if (updateData.origen) envio.origen = updateData.origen;
+    if (updateData.destino) envio.destino = updateData.destino;
+    if (updateData.fechaRetiro) envio.fechaRetiro = updateData.fechaRetiro;
+    if (updateData.horaRetiroAprox !== undefined) envio.horaRetiroAprox = updateData.horaRetiroAprox;
+    if (updateData.tamanoPaquete) envio.tamanoPaquete = updateData.tamanoPaquete;
+    if (updateData.notas !== undefined) envio.notas = updateData.notas;
+    if (updateData.estado) envio.estado = updateData.estado;
+
+    const updatedEnvio = await envio.save();
+    // Poblar categoría para que el DTO tenga { id, nombre }
+    await updatedEnvio.populate({ path: 'category', select: 'name description' });
+    return buildEnvioDTOResponse(updatedEnvio);
+  } catch (error) {
+    throw error;
+  }
+};
+
+
+const findEnvioByIdInDB = async (envioId, userId, userRole = "cliente") => {
+  let envio;
+  try {
+    envio = await Envio.findById(envioId)
+      .populate('user', 'username email nombre apellido role plan empresa')
+      .populate('category', 'name description');
+  } catch (e) {
+    // ID con formato inválido -> CastError => 400
+    if (e.name === "CastError") {
+      const err = new Error("invalid envio id");
+      err.status = "bad_request";
+      err.code = StatusCodes.BAD_REQUEST;
       throw err;
     }
+    // Otros problemas de DB -> 500
+    const err = new Error("error getting envio in database");
+    err.status = "internal_server_error";
+    err.code = StatusCodes.INTERNAL_SERVER_ERROR;
+    throw err;
+  }
 
-    // ID válido pero no existe -> 404
-    if (!envio) {
-      const err = new Error("envio was not found in database");
-      err.status = "not_found";
-      err.code = StatusCodes.NOT_FOUND;
-      throw err;
-    }
+  // ID válido pero no existe -> 404
+  if (!envio) {
+    const err = new Error("envio was not found in database");
+    err.status = "not_found";
+    err.code = StatusCodes.NOT_FOUND;
+    throw err;
+  }
 
-    // Autorización -> 403 (salvo admin)
-    let ownerId;
-    if (envio.user) {
-      // Si user está poblado como objeto, extraer _id o id
-      ownerId = envio.user._id ? String(envio.user._id) : (envio.user.id ? String(envio.user.id) : String(envio.user));
-    } else {
-      // Si user es null/undefined, el envío está huérfano - solo admin puede acceder
-      ownerId = null;
-    }
+  // Autorización -> 403 (salvo admin)
+  let ownerId;
+  if (envio.user) {
+    // Si user está poblado como objeto, extraer _id o id
+    ownerId = envio.user._id ? String(envio.user._id) : (envio.user.id ? String(envio.user.id) : String(envio.user));
+  } else {
+    // Si user es null/undefined, el envío está huérfano - solo admin puede acceder
+    ownerId = null;
+  }
 
-    if (userRole !== "admin" && ownerId !== String(userId)) {
-      console.log('Authorization failed:', {
-        userRole,
-        ownerId,
-        userId: String(userId),
-        userField: envio.user
-      });
-      const err = new Error("not allowed to access this resource");
-      err.status = "forbidden";
-      err.code = StatusCodes.FORBIDDEN;
-      throw err;
-    }
-
-
-    return envio;
-  };
-
-  const filtrarEnvios = (envios, filtros) => {
-    let enviosFiltrados = envios;
+  if (userRole !== "admin" && ownerId !== String(userId)) {
+    console.log('Authorization failed:', {
+      userRole,
+      ownerId,
+      userId: String(userId),
+      userField: envio.user
+    });
+    const err = new Error("not allowed to access this resource");
+    err.status = "forbidden";
+    err.code = StatusCodes.FORBIDDEN;
+    throw err;
+  }
 
 
-    // Filtrar por estado
-    if (filtros.estado) {
+  return envio;
+};
 
-      enviosFiltrados = enviosFiltrados.filter(
-        (envio) => envio.estado === filtros.estado
-      );
+const filtrarEnvios = (envios, filtros) => {
+  let enviosFiltrados = envios;
 
-    }
 
-    // Filtrar por fecha específica
-    if (filtros.fecha) {
+  // Filtrar por estado
+  if (filtros.estado) {
 
-      enviosFiltrados = enviosFiltrados.filter((envio) => {
-        const fechaEnvio = new Date(envio.fechaRetiro)
-          .toISOString()
-          .split("T")[0];
-        const fechaFiltro = filtros.fecha;
+    enviosFiltrados = enviosFiltrados.filter(
+      (envio) => envio.estado === filtros.estado
+    );
 
-        return fechaEnvio === fechaFiltro;
-      });
+  }
 
-    }
+  // Filtrar por fecha específica
+  if (filtros.fecha) {
 
-    // Filtrar por rango de fechas
-    if (filtros.fechaDesde) {
-      const fechaDesde = new Date(filtros.fechaDesde);
-      enviosFiltrados = enviosFiltrados.filter(
-        (envio) => new Date(envio.fechaRetiro) >= fechaDesde
-      );
-    }
+    enviosFiltrados = enviosFiltrados.filter((envio) => {
+      const fechaEnvio = new Date(envio.fechaRetiro)
+        .toISOString()
+        .split("T")[0];
+      const fechaFiltro = filtros.fecha;
 
-    if (filtros.fechaHasta) {
-      const fechaHasta = new Date(filtros.fechaHasta);
-      fechaHasta.setHours(23, 59, 59, 999); // Hasta el final del día
-      enviosFiltrados = enviosFiltrados.filter(
-        (envio) => new Date(envio.fechaRetiro) <= fechaHasta
-      );
-    }
+      return fechaEnvio === fechaFiltro;
+    });
 
-    return enviosFiltrados;
-  };
+  }
 
-  //cuenta la cantidad de envios con estado pendiente de un usuario
-  const countPendientesByUser = async (userId) => {
-    return Envio.countDocuments({ user: userId, estado: "pendiente" });
-  };
+  // Filtrar por rango de fechas
+  if (filtros.fechaDesde) {
+    const fechaDesde = new Date(filtros.fechaDesde);
+    enviosFiltrados = enviosFiltrados.filter(
+      (envio) => new Date(envio.fechaRetiro) >= fechaDesde
+    );
+  }
 
-  module.exports = {
-    findEnvioById,
-    getEnviosByUserId,
-    getAllEnviosAdmin,
-    deleteEnvio,
-    createEnvio,
-    updateEnvio,
-    filtrarEnvios,
-    countPendientesByUser,
-  };
+  if (filtros.fechaHasta) {
+    const fechaHasta = new Date(filtros.fechaHasta);
+    fechaHasta.setHours(23, 59, 59, 999); // Hasta el final del día
+    enviosFiltrados = enviosFiltrados.filter(
+      (envio) => new Date(envio.fechaRetiro) <= fechaHasta
+    );
+  }
+
+  return enviosFiltrados;
+};
+
+//cuenta la cantidad de envios con estado pendiente de un usuario
+const countPendientesByUser = async (userId) => {
+  return Envio.countDocuments({ user: userId, estado: "pendiente" });
+};
+
+
+// Convierte 'YYYY-MM-DD' a ISOString del inicio del día en UTC
+function utcStartOfDay(isoYmd) {
+  // Asegurarse que sea string y extraer solo YYYY-MM-DD
+  const dateStr = String(isoYmd).substring(0, 10);
+  return new Date(dateStr + 'T00:00:00.000Z');
+}
+
+// Convierte 'YYYY-MM-DD' a ISOString del final del día en UTC
+function utcEndOfDay(isoYmd) {
+  // Asegurarse que sea string y extraer solo YYYY-MM-DD
+  const dateStr = String(isoYmd).substring(0, 10);
+  return new Date(dateStr + 'T23:59:59.999Z');
+}
+
+
+
+module.exports = {
+  findEnvioById,
+  getEnviosByUserId,
+  getAllEnviosAdmin,
+  deleteEnvio,
+  createEnvio,
+  updateEnvio,
+  filtrarEnvios,
+  countPendientesByUser,
+};
