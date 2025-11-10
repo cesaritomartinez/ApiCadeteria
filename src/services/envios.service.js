@@ -270,6 +270,7 @@ const createEnvio = async (envioData, userId) => {
     tamanoPaquete: envioData.tamanoPaquete,
     notas: envioData.notas,
     category: categoryId,
+    comprobantePagoUrl: envioData.comprobantePagoUrl,
   });
 
   try {
@@ -349,6 +350,7 @@ const updateEnvio = async (envioId, updateData, userId, userRole = "cliente") =>
     if (updateData.tamanoPaquete) envio.tamanoPaquete = updateData.tamanoPaquete;
     if (updateData.notas !== undefined) envio.notas = updateData.notas;
     if (updateData.estado) envio.estado = updateData.estado;
+    if (updateData.comprobantePagoUrl !== undefined) envio.comprobantePagoUrl = updateData.comprobantePagoUrl;
 
     const updatedEnvio = await envio.save();
     // Poblar categoría para que el DTO tenga { id, nombre }

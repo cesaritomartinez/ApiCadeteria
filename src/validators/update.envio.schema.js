@@ -24,7 +24,8 @@ const updateEnvioSchema = Joi.object({
   categoryId: Joi.string().trim().allow(null, '').messages({
     'string.base': 'El ID de categoría debe ser un texto válido'
   }),
-  estado: Joi.string().valid('pendiente', 'en_ruta', 'entregado', 'cancelado')
+  estado: Joi.string().valid('pendiente', 'en_ruta', 'entregado', 'cancelado'),
+  comprobantePagoUrl: Joi.string().uri().trim().allow('', null).optional()
 }).min(1).messages({
   'object.min': 'Debe proporcionar al menos un campo para actualizar'
 });

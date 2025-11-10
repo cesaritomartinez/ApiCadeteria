@@ -11,6 +11,7 @@ const buildEnvioDTOResponse = (envio) => {
     category: envio.category,
     estado: envio.estado,
     codigoSeguimiento: envio.codigoSeguimiento,
+    comprobantePagoUrl: envio.comprobantePagoUrl,
     fechaCreacion: envio.createdAt,
     fechaActualizacion: envio.updatedAt,
   };

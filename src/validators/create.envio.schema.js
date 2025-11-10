@@ -38,7 +38,10 @@ const createEnvioSchema = Joi.object({
     }),
 
   //  También opcional por ObjectId
-  categoryId: Joi.string().length(24).hex().optional()
+  categoryId: Joi.string().length(24).hex().optional(),
+
+  // Comprobante de pago (opcional)
+  comprobantePagoUrl: Joi.string().uri().trim().allow('', null).optional()
 })
 // Evita que falle por claves extra como "categoria" si la normalización no corriera
 .unknown(true);
