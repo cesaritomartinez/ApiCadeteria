@@ -2,6 +2,7 @@ const { createError } = require('../utils/error');
 const { StatusCodes } = require('http-status-codes');
 const usersService = require('../services/users.service');
 const updatePlanSchema = require('../validators/update.plan.schema');
+const updateUserImageSchema = require('../validators/update.user.image.schema');
 
 const updatePlan = async (req, res) => {
   try {
@@ -77,4 +78,29 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-module.exports = { updatePlan, upgradePlan, downgradePlan, getAllUsers };
+const updateMyImage = async (req, res) => {
+  try {
+    // Usuario autenticado
+    const userId = req.userId;
+
+    // Validar body
+    const { error, value } = updateUserImageSchema.validate(req.body);
+    if (error) {
+      return res.status(StatusCodes.BAD_REQUEST).json(
+        createError('bad_request', error.details[0].message)
+      );
+    }
+
+    const { imageUrl } = value;
+
+    const updatedUserDTO = await usersService.updateUserImageUrl(userId, imageUrl);
+
+    return res.status(StatusCodes.OK).json(updatedUserDTO);
+  } catch (error) {
+    return res
+      .status(error.code || StatusCodes.INTERNAL_SERVER_ERROR)
+      .json(createError(error.status, error.message));
+  }
+};
+
+module.exports = { updatePlan, upgradePlan, downgradePlan, getAllUsers, updateMyImage };

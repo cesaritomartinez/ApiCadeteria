@@ -13,6 +13,7 @@ const {
   upgradePlan,
   downgradePlan,
   getAllUsers,
+  updateMyImage,
 } = require("../controllers/users.controller");
 
 // Aplicar middleware de autenticación a todas las rutas privadas
@@ -35,5 +36,7 @@ router.get("/users", getAllUsers); // Admin obtiene lista de usuarios
 router.put("/users/plan", updatePlan); // Admin cambia plan de cualquier usuario
 router.post("/users/upgrade-plan", upgradePlan); // Usuario cambia su propio plan
 router.post("/users/downgrade-plan", downgradePlan); // Usuario cancela su plan premium
+// Usuarios - Actualizar SOLO la foto del usuario autenticado
+router.put("/users/me/image", updateMyImage);
 
 module.exports = router;

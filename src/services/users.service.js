@@ -202,10 +202,31 @@ const getAllUsers = async () => {
   }
 };
 
+const updateUserImageUrl = async (userId, imageUrl) => {
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      const error = new Error("Usuario no encontrado");
+      error.status = "not_found";
+      error.code = StatusCodes.NOT_FOUND;
+      throw error;
+    }
+
+    user.imageUrl = imageUrl;
+    const updatedUser = await user.save();
+
+    return buildUserDTOResponse(updatedUser);
+  } catch (error) {
+    throw error;
+  }
+};
+
 module.exports = {
   doLogin,
   registerUser,
   updateUserPlan,
   downgradeUserPlan,
   getAllUsers,
+  updateUserImageUrl,
 };
